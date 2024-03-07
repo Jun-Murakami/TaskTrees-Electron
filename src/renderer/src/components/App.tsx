@@ -1,4 +1,4 @@
-import { BrowserRouter as Router, Route, Routes } from 'react-router-dom'
+import { HashRouter as Router, Route, Routes } from 'react-router-dom'
 import { theme, darkTheme } from '../theme/mui_theme'
 import { CssBaseline, ThemeProvider, Divider } from '@mui/material'
 import { useAppStateStore } from '../store/appStateStore'
@@ -14,8 +14,8 @@ export default function App() {
       <Divider sx={{ position: 'fixed', width: '100%', top: 0, zIndex: 10000 }} />
       <Router>
         <Routes>
-          <Route path="/privacy-policy" Component={PrivacyPolicy} />
-          <Route path="/" Component={HomePage} />
+          <Route path="/privacy-policy" element={<PrivacyPolicy />} />
+          <Route path="/" element={<HomePage />} />
         </Routes>
       </Router>
     </ThemeProvider>

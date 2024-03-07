@@ -328,7 +328,8 @@ export function HomePage() {
               ) : (
                 <>
                   最新バージョン: {latestVersion}
-                  お使いのバージョンは最新です。
+                  {!latestVersion.includes('※バージョン情報の取得に失敗しました。') &&
+                    'お使いのバージョンは最新です。'}
                 </>
               )}
             </Typography>
