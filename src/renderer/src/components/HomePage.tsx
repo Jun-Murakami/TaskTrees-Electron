@@ -277,7 +277,7 @@ export function HomePage() {
               </Button>
               <Typography variant="caption" sx={{ marginY: 4 }}>
                 <a href="https://tasktree-s.web.app" target="_blank">
-                  Webアプリ版
+                  Web版
                 </a>
                 を先にご利用の方は、最初にメールアドレスを入力して
                 <br />
@@ -328,6 +328,7 @@ export function HomePage() {
               ) : (
                 <>
                   最新バージョン: {latestVersion}
+                  <br />
                   {!latestVersion.includes('※バージョン情報の取得に失敗しました。') &&
                     'お使いのバージョンは最新です。'}
                 </>
