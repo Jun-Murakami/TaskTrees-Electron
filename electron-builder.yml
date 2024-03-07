@@ -14,7 +14,7 @@ asarUnpack:
 win:
   executableName: TaskTrees
 nsis:
-  artifactName: ${productName}-${version}-setup.${ext}
+  artifactName: ${productName}-${version}-setup_win_x64.${ext}
   shortcutName: ${productName}
   uninstallDisplayName: ${productName}
   createDesktopShortcut: always
