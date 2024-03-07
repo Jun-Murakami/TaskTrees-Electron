@@ -37,9 +37,6 @@ export const useAppStateSync = () => {
           if (isValidAppSettingsState(data)) {
             setHideDoneItems(data.hideDoneItems)
             setDarkMode(data.darkMode)
-            window.electron.getDarkMode().then((isDarkMode) => {
-              setDarkMode(isDarkMode)
-            })
             setIsLoadedFromExternal(true)
           }
         }
@@ -51,29 +48,24 @@ export const useAppStateSync = () => {
 
   // ダークモード、完了済みアイテムの非表示設定の保存 ------------------------------------------------
   useEffect(() => {
-    const debounceSave = setTimeout(() => {
-      const user = getAuth().currentUser
-      const db = getDatabase()
-      if (!user || !db) {
-        return
-      }
+    const user = getAuth().currentUser
+    const db = getDatabase()
+    if (!user || !db) {
+      return
+    }
 
-      if (isLoadedFromExternal) {
-        setIsLoadedFromExternal(false)
-        return
-      }
+    if (isLoadedFromExternal) {
+      setIsLoadedFromExternal(false)
+      return
+    }
 
-      try {
-        const userSettingsRef = ref(db, `users/${user.uid}/settings`)
-        set(userSettingsRef, { darkMode, hideDoneItems })
-      } catch (error) {
-        handleError(error)
-      }
-    }, 3000) // 3秒のデバウンス
-
-    // コンポーネントがアンマウントされるか、依存配列の値が変更された場合にタイマーをクリア
-    return () => clearTimeout(debounceSave)
-  }, [darkMode, hideDoneItems, isLoadedFromExternal, handleError])
+    try {
+      const userSettingsRef = ref(db, `users/${user.uid}/settings`)
+      set(userSettingsRef, { darkMode, hideDoneItems })
+    } catch (error) {
+      handleError(error)
+    }
+  }, [darkMode, hideDoneItems, handleError])
 
   // 現在の日時を取得する
   function getCurrentDateTime() {

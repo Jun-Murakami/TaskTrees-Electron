@@ -13,7 +13,6 @@ if (process.contextIsolated) {
       ...electronAPI,
       getAppVersion: () => ipcRenderer.invoke('get-app-version'),
       setDarkMode: (isDarkMode) => ipcRenderer.send('set-dark-mode', isDarkMode),
-      getDarkMode: () => ipcRenderer.invoke('get-dark-mode'),
       createNewTree: (callback) => ipcRenderer.on('create-new-tree', callback),
       removeCreateNewTreeListener: () => ipcRenderer.removeAllListeners('create-new-tree'),
       onLoadedContent: (callback: (data: string | null) => void) => {

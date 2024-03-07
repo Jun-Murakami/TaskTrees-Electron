@@ -341,7 +341,7 @@ export function HomePage() {
             </a>{' '}
             |{' '}
             <a
-              href="https://github.com/Jun-Murakami/TaskTrees-desktop"
+              href="https://github.com/Jun-Murakami/TaskTrees-Electron"
               target="_blank"
               rel="noreferrer"
             >

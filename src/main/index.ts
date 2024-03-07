@@ -110,21 +110,17 @@ app.whenReady().then(() => {
   })
 
   // IPC ------------------------------------------------------------------------------------
+
+  // アプリのバージョンを取得
   ipcMain.handle('get-app-version', () => {
     return app.getVersion()
   })
 
-  // ダークモードの状態を保存する変数
-  let darkMode = false
-
+  // ダークモードの設定
   ipcMain.on('set-dark-mode', (_, isDarkMode) => {
-    darkMode = isDarkMode
     nativeTheme.themeSource = isDarkMode ? 'dark' : 'light'
   })
 
-  ipcMain.handle('get-dark-mode', async () => {
-    return darkMode
-  })
   // メニュー項目の定義
   const template: (Electron.MenuItemConstructorOptions | Electron.MenuItem)[] = [
     {
