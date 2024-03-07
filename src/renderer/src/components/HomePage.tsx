@@ -1,0 +1,355 @@
+import { useState, useEffect, useRef } from 'react'
+import { useAppStateSync } from '../hooks/useAppStateSync'
+import { useTreeManagement } from '../hooks/useTreeManagement'
+import { useAuth } from '../hooks/useAuth'
+import { ModalDialog } from '../components/ModalDialog'
+import { InputDialog } from '../components/InputDialog'
+import { ResponsiveDrawer } from './ResponsiveDrawer'
+import { Button, CircularProgress, Typography, Paper, Box, TextField, Stack } from '@mui/material'
+import { useTheme } from '@mui/material/styles'
+import DeleteForeverIcon from '@mui/icons-material/DeleteForever'
+import { TreeSettingsAccordion } from './TreeSettingsAccordion'
+import { SortableTree } from './SortableTree/SortableTree'
+import { useDialogStore } from '../store/dialogStore'
+import { useInputDialogStore } from '../store/dialogStore'
+import { useAppStateStore } from '../store/appStateStore'
+import { useTreeStateStore } from '../store/treeStateStore'
+import { useNativeMenu } from '@renderer/hooks/useNativeMenu'
+import TaskTreesLogo from '../assets/TaskTrees.svg'
+
+export function HomePage() {
+  const [currentVersion, setCurrentVersion] = useState('')
+  const [latestVersion, setLatestVersion] = useState('')
+  const [updateMessage, setUpdateMessage] = useState('')
+  const [isNewVersionAvailable, setIsNewVersionAvailable] = useState(false)
+  const [email, setEmail] = useState('')
+  const [password, setPassword] = useState('')
+
+  const isLoading = useAppStateStore((state) => state.isLoading) // ローディング中の状態
+  const isLoggedIn = useAppStateStore((state) => state.isLoggedIn) // ログイン状態
+  const systemMessage = useAppStateStore((state) => state.systemMessage) // システムメッセージ
+  const isWaitingForDelete = useAppStateStore((state) => state.isWaitingForDelete) // アカウント削除の確認状態
+  const setIsWaitingForDelete = useAppStateStore((state) => state.setIsWaitingForDelete) // アカウント削除の確認状態を変更
+  const currentTree = useTreeStateStore((state) => state.currentTree)
+
+  const isDialogVisible = useDialogStore(
+    (state: { isDialogVisible: boolean }) => state.isDialogVisible
+  )
+  const isInputDialogVisible = useInputDialogStore(
+    (state: { isDialogVisible: boolean }) => state.isDialogVisible
+  )
+
+  // 認証状態の監視とログイン、ログアウトを行うカスタムフック
+  const { handleSignup, handleLogin, handleLogout, handleDeleteAccount, handleResetPassword } =
+    useAuth()
+
+  // アプリの状態の読み込みと保存を行うカスタムフック
+  const { handleDownloadAppState } = useAppStateSync()
+
+  //ツリーの状態を同期するカスタムフック
+  const {
+    deleteTree,
+    handleCreateNewTree,
+    handleListClick,
+    handleFileUpload,
+    handleLoadedContent
+  } = useTreeManagement()
+
+  // メニューのイベントリスナーを登録するカスタムフック
+  useNativeMenu({
+    handleCreateNewTree,
+    handleLoadedContent,
+    handleDownloadAppState
+  })
+
+  const theme = useTheme()
+
+  // アプリバージョン情報の取得
+  useEffect(() => {
+    // 現在のアプリバージョンを取得
+    const fetchCurrentVersion = async () => {
+      const version = await window.electron.getAppVersion()
+      setCurrentVersion(version)
+    }
+
+    // 最新バージョン情報を取得
+    const fetchLatestVersion = async () => {
+      try {
+        const response = await fetch('https://tasktree-s.web.app/version.json')
+        const data = await response.json()
+        setLatestVersion(data.version)
+        setUpdateMessage(data.message)
+      } catch (error) {
+        setLatestVersion('※バージョン情報の取得に失敗しました。' + error)
+      }
+    }
+
+    fetchCurrentVersion()
+    fetchLatestVersion()
+  }, [isLoggedIn])
+
+  // 新しいバージョンがあるかどうかを判定
+  useEffect(() => {
+    if (currentVersion && latestVersion) {
+      const currentVersionArray = currentVersion.split('.').map((v) => parseInt(v))
+      const latestVersionArray = latestVersion.split('.').map((v) => parseInt(v))
+      if (currentVersionArray[0] < latestVersionArray[0]) {
+        setIsNewVersionAvailable(true)
+      } else if (currentVersionArray[0] === latestVersionArray[0]) {
+        if (currentVersionArray[1] < latestVersionArray[1]) {
+          setIsNewVersionAvailable(true)
+        } else if (currentVersionArray[1] === latestVersionArray[1]) {
+          if (currentVersionArray[2] < latestVersionArray[2]) {
+            setIsNewVersionAvailable(true)
+          }
+        }
+      }
+    }
+  }, [currentVersion, latestVersion])
+
+  const loginButtonRef = useRef<HTMLButtonElement>(null)
+
+  return (
+    <>
+      {isLoggedIn ? (
+        !isWaitingForDelete ? (
+          // ログイン後のメイン画面
+          <>
+            {isDialogVisible && <ModalDialog />}
+            {isInputDialogVisible && <InputDialog />}
+            <ResponsiveDrawer
+              handleCreateNewTree={handleCreateNewTree}
+              handleListClick={handleListClick}
+              handleFileUpload={handleFileUpload}
+              handleDownloadAppState={handleDownloadAppState}
+              handleLogout={handleLogout}
+            />
+            <Box
+              sx={{
+                marginLeft: { sm: '240px' }, // smサイズの時だけ左マージンを240pxに設定
+                width: { xs: '100%', sm: 'calc(100% - 240px)' }, // smサイズの時だけ幅をResponsiveDrawerの幅を考慮して調整}}
+                minHeight: currentTree !== null ? '100vh' : 'auto'
+              }}
+            >
+              {currentTree ? (
+                <>
+                  <TreeSettingsAccordion deleteTree={deleteTree} />
+                  <Box
+                    sx={{
+                      maxWidth: '900px', // 最大幅を指定
+                      width: '100%', // 横幅いっぱいに広がる
+                      marginX: 'auto', // 中央寄せ
+                      mb: 6
+                    }}
+                  >
+                    <SortableTree collapsible indicator removable />
+                  </Box>
+                </>
+              ) : (
+                <Typography variant="h3">
+                  <img
+                    src={TaskTreesLogo}
+                    alt="Task Tree"
+                    style={{
+                      width: '35px',
+                      height: '35px',
+                      marginTop: '30px',
+                      marginRight: '10px'
+                    }}
+                  />
+                  TaskTrees
+                </Typography>
+              )}
+            </Box>
+            {isLoading && (
+              <CircularProgress
+                sx={{
+                  marginTop: 4,
+                  display: 'block',
+                  position: 'absolute',
+                  left: { xs: 'calc(50% - 20px)', sm: 'calc(50% + 100px)' }
+                }}
+              />
+            )}
+          </>
+        ) : (
+          // アカウント削除の確認ダイアログ
+          <>
+            <Typography sx={{ marginBottom: 0 }} variant="h3">
+              <img
+                src={TaskTreesLogo}
+                alt="Task Tree"
+                style={{ width: '35px', height: '35px', marginRight: '10px' }}
+              />
+              TaskTrees
+            </Typography>
+            <Box sx={{ width: '100%', marginTop: -1, marginBottom: 4 }}>
+              <Typography variant="caption" sx={{ width: '100%' }}>
+                Desktop
+              </Typography>
+            </Box>
+            <Typography variant="body2" sx={{ marginY: 4 }}>
+              アプリケーションのすべてのデータとアカウント情報が削除されます。この操作は取り消せません。削除を実行しますか？
+            </Typography>
+            <Button
+              onClick={handleDeleteAccount}
+              variant={'contained'}
+              startIcon={<DeleteForeverIcon />}
+              color="error"
+              sx={{ marginRight: 4 }}
+            >
+              削除する
+            </Button>
+            <Button onClick={() => setIsWaitingForDelete(false)} variant={'outlined'}>
+              キャンセル
+            </Button>
+          </>
+        )
+      ) : (
+        // ログイン前の画面
+        <>
+          <Typography sx={{ marginBottom: 0 }} variant="h3">
+            <img
+              src={TaskTreesLogo}
+              alt="Task Tree"
+              style={{ width: '35px', height: '35px', marginRight: '10px' }}
+            />
+            TaskTrees
+          </Typography>
+          <Box sx={{ width: '100%', marginTop: -1, marginBottom: 4 }}>
+            <Typography variant="caption" sx={{ width: '100%' }}>
+              Team Edition
+            </Typography>
+          </Box>
+          {isLoading ? (
+            <CircularProgress
+              sx={{
+                marginY: 4,
+                display: 'block',
+                marginX: 'auto'
+              }}
+            />
+          ) : (
+            <Stack spacing={2} sx={{ width: 400, marginX: 'auto', justifyContent: 'center' }}>
+              <TextField
+                label="メールアドレス"
+                variant="outlined"
+                margin="normal"
+                value={email}
+                size="small"
+                onChange={(e) => setEmail(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') {
+                    loginButtonRef.current?.click()
+                  }
+                }}
+              />
+              <TextField
+                label="パスワード"
+                variant="outlined"
+                margin="normal"
+                type="password"
+                value={password}
+                size="small"
+                onChange={(e) => setPassword(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') {
+                    loginButtonRef.current?.click()
+                  }
+                }}
+              />
+              <Button
+                ref={loginButtonRef}
+                onClick={() => handleLogin(email, password)}
+                variant={'contained'}
+              >
+                ログイン
+              </Button>
+              <Button
+                onClick={() => handleSignup(email, password)}
+                variant={'outlined'}
+                size="small"
+              >
+                サインアップ
+              </Button>
+              <Button onClick={() => handleResetPassword(email)} variant={'outlined'} size="small">
+                パスワードをリセット
+              </Button>
+              <Typography variant="caption" sx={{ marginY: 4 }}>
+                <a href="https://tasktree-s.web.app" target="_blank">
+                  Webアプリ版
+                </a>
+                を先にご利用の方は、最初にメールアドレスを入力して
+                <br />
+                パスワードをリセットしてください。
+                <br />
+                ※ツリーデータはデスクトップ版とWebアプリ版で共有されます。
+              </Typography>
+            </Stack>
+          )}
+          {systemMessage && (
+            <Box
+              sx={{
+                backgroundColor: theme.palette.action.hover,
+                borderRadius: 4,
+                py: '10px',
+                mx: 'auto',
+                my: 2,
+                maxWidth: 400
+              }}
+            >
+              <Typography
+                variant="body2"
+                sx={{
+                  marginY: '1px',
+                  color: theme.palette.primary.main
+                }}
+              >
+                {systemMessage}
+              </Typography>
+            </Box>
+          )}
+
+          <Paper sx={{ maxWidth: 400, margin: 'auto', marginTop: 4 }}>
+            <Typography variant="body2" sx={{ textAlign: 'left', p: 2 }} gutterBottom>
+              ver{currentVersion}
+              <br />
+              <br />
+              {isNewVersionAvailable ? (
+                <>
+                  {`最新バージョン: ${latestVersion} が利用可能です。`}
+                  <br />
+                  <a href="https://tasktree-s.web.app/download" target="_blank" rel="noreferrer">
+                    ダウンロード
+                  </a>
+                  <br />
+                  <br />＞ {updateMessage}
+                </>
+              ) : (
+                <>
+                  最新バージョン: {latestVersion}
+                  お使いのバージョンは最新です。
+                </>
+              )}
+            </Typography>
+          </Paper>
+          <Typography variant="caption" sx={{ width: '100%', minWidth: '100%' }}>
+            <a href="mailto:app@bucketrelay.com" target="_blank" rel="noreferrer">
+              ©{new Date().getFullYear()} Jun Murakami
+            </a>{' '}
+            |{' '}
+            <a
+              href="https://github.com/Jun-Murakami/TaskTrees-desktop"
+              target="_blank"
+              rel="noreferrer"
+            >
+              GitHub
+            </a>{' '}
+            | <a href="/privacy-policy">Privacy policy</a>
+          </Typography>
+          <Typography variant="caption" sx={{ width: '100%' }}></Typography>
+        </>
+      )}
+    </>
+  )
+}
