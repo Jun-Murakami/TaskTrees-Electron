@@ -14,7 +14,7 @@ asarUnpack:
 win:
   executableName: TaskTrees
 nsis:
-  artifactName: ${productName}-${version}-setup_win_x64.${ext}
+  artifactName: ${productName}-${version}-setup_win_${arch}.${ext}
   shortcutName: ${productName}
   uninstallDisplayName: ${productName}
   createDesktopShortcut: always
@@ -27,7 +27,7 @@ mac:
     - NSDownloadsFolderUsageDescription: Application requests access to the user's Downloads folder.
   notarize: false
 dmg:
-  artifactName: ${productName}-${version}.${ext}
+  artifactName: ${productName}-${version}_mac_${arch}.${ext}
 linux:
   target:
     - AppImage
