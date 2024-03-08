@@ -1,11 +1,13 @@
-import { useState, useEffect, useRef } from 'react'
+import { useState, useRef } from 'react'
 import { useAppStateSync } from '../hooks/useAppStateSync'
 import { useTreeManagement } from '../hooks/useTreeManagement'
 import { useAuth } from '../hooks/useAuth'
 import { ModalDialog } from '../components/ModalDialog'
 import { InputDialog } from '../components/InputDialog'
 import { ResponsiveDrawer } from './ResponsiveDrawer'
-import { Button, CircularProgress, Typography, Paper, Box, TextField, Stack } from '@mui/material'
+import { MessagePaper } from './MessagePaper'
+import { TaskTreesLogo } from './TaskTreesLogo'
+import { Button, CircularProgress, Typography, Box, TextField, Stack } from '@mui/material'
 import { useTheme } from '@mui/material/styles'
 import DeleteForeverIcon from '@mui/icons-material/DeleteForever'
 import { TreeSettingsAccordion } from './TreeSettingsAccordion'
@@ -15,13 +17,8 @@ import { useInputDialogStore } from '../store/dialogStore'
 import { useAppStateStore } from '../store/appStateStore'
 import { useTreeStateStore } from '../store/treeStateStore'
 import { useElectron } from '@renderer/hooks/useElectron'
-import TaskTreesLogo from '../assets/TaskTrees.svg'
 
 export function HomePage() {
-  const [currentVersion, setCurrentVersion] = useState('')
-  const [latestVersion, setLatestVersion] = useState('')
-  const [updateMessage, setUpdateMessage] = useState('')
-  const [isNewVersionAvailable, setIsNewVersionAvailable] = useState(false)
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
 
@@ -64,49 +61,6 @@ export function HomePage() {
 
   const theme = useTheme()
 
-  // アプリバージョン情報の取得
-  useEffect(() => {
-    // 現在のアプリバージョンを取得
-    const fetchCurrentVersion = async () => {
-      const version = await window.electron.getAppVersion()
-      setCurrentVersion(version)
-    }
-
-    // 最新バージョン情報を取得
-    const fetchLatestVersion = async () => {
-      try {
-        const response = await fetch('https://tasktree-s.web.app/version.json')
-        const data = await response.json()
-        setLatestVersion(data.version)
-        setUpdateMessage(data.message)
-      } catch (error) {
-        setLatestVersion('※バージョン情報の取得に失敗しました。' + error)
-      }
-    }
-
-    fetchCurrentVersion()
-    fetchLatestVersion()
-  }, [isLoggedIn])
-
-  // 新しいバージョンがあるかどうかを判定
-  useEffect(() => {
-    if (currentVersion && latestVersion) {
-      const currentVersionArray = currentVersion.split('.').map((v) => parseInt(v))
-      const latestVersionArray = latestVersion.split('.').map((v) => parseInt(v))
-      if (currentVersionArray[0] < latestVersionArray[0]) {
-        setIsNewVersionAvailable(true)
-      } else if (currentVersionArray[0] === latestVersionArray[0]) {
-        if (currentVersionArray[1] < latestVersionArray[1]) {
-          setIsNewVersionAvailable(true)
-        } else if (currentVersionArray[1] === latestVersionArray[1]) {
-          if (currentVersionArray[2] < latestVersionArray[2]) {
-            setIsNewVersionAvailable(true)
-          }
-        }
-      }
-    }
-  }, [currentVersion, latestVersion])
-
   const loginButtonRef = useRef<HTMLButtonElement>(null)
 
   return (
@@ -134,31 +88,15 @@ export function HomePage() {
               {currentTree ? (
                 <>
                   <TreeSettingsAccordion deleteTree={deleteTree} />
-                  <Box
-                    sx={{
-                      maxWidth: '900px', // 最大幅を指定
-                      width: '100%', // 横幅いっぱいに広がる
-                      marginX: 'auto', // 中央寄せ
-                      mb: 6
-                    }}
-                  >
+                  <Box sx={{ maxWidth: '900px', width: '100%', marginX: 'auto', mb: 6 }}>
                     <SortableTree collapsible indicator removable />
                   </Box>
                 </>
               ) : (
-                <Typography variant="h3">
-                  <img
-                    src={TaskTreesLogo}
-                    alt="Task Tree"
-                    style={{
-                      width: '35px',
-                      height: '35px',
-                      marginTop: '30px',
-                      marginRight: '10px'
-                    }}
-                  />
-                  TaskTrees
-                </Typography>
+                <>
+                  <TaskTreesLogo />
+                  <MessagePaper />
+                </>
               )}
             </Box>
             {isLoading && (
@@ -175,19 +113,7 @@ export function HomePage() {
         ) : (
           // アカウント削除の確認ダイアログ
           <>
-            <Typography sx={{ marginBottom: 0 }} variant="h3">
-              <img
-                src={TaskTreesLogo}
-                alt="Task Tree"
-                style={{ width: '35px', height: '35px', marginRight: '10px' }}
-              />
-              TaskTrees
-            </Typography>
-            <Box sx={{ width: '100%', marginTop: -1, marginBottom: 4 }}>
-              <Typography variant="caption" sx={{ width: '100%' }}>
-                Desktop
-              </Typography>
-            </Box>
+            <TaskTreesLogo />
             <Typography variant="body2" sx={{ marginY: 4 }}>
               アプリケーションのすべてのデータとアカウント情報が削除されます。この操作は取り消せません。削除を実行しますか？
             </Typography>
@@ -208,19 +134,7 @@ export function HomePage() {
       ) : (
         // ログイン前の画面
         <>
-          <Typography sx={{ marginBottom: 0 }} variant="h3">
-            <img
-              src={TaskTreesLogo}
-              alt="Task Tree"
-              style={{ width: '35px', height: '35px', marginRight: '10px' }}
-            />
-            TaskTrees
-          </Typography>
-          <Box sx={{ width: '100%', marginTop: -1, marginBottom: 4 }}>
-            <Typography variant="caption" sx={{ width: '100%' }}>
-              Team Edition
-            </Typography>
-          </Box>
+          <TaskTreesLogo />
           {isLoading ? (
             <CircularProgress
               sx={{
@@ -310,46 +224,7 @@ export function HomePage() {
             </Box>
           )}
 
-          <Paper sx={{ maxWidth: 400, margin: 'auto', marginTop: 4 }}>
-            <Typography variant="body2" sx={{ textAlign: 'left', p: 2 }} gutterBottom>
-              ver{currentVersion}
-              <br />
-              <br />
-              {isNewVersionAvailable ? (
-                <>
-                  {`最新バージョン: ${latestVersion} が利用可能です。`}
-                  <br />
-                  <a href="https://tasktree-s.web.app/download" target="_blank" rel="noreferrer">
-                    ダウンロード
-                  </a>
-                  <br />
-                  <br />＞ {updateMessage}
-                </>
-              ) : (
-                <>
-                  最新バージョン: {latestVersion}
-                  <br />
-                  {!latestVersion.includes('※バージョン情報の取得に失敗しました。') &&
-                    'お使いのバージョンは最新です。'}
-                </>
-              )}
-            </Typography>
-          </Paper>
-          <Typography variant="caption" sx={{ width: '100%', minWidth: '100%' }}>
-            <a href="mailto:app@bucketrelay.com" target="_blank" rel="noreferrer">
-              ©{new Date().getFullYear()} Jun Murakami
-            </a>{' '}
-            |{' '}
-            <a
-              href="https://github.com/Jun-Murakami/TaskTrees-Electron"
-              target="_blank"
-              rel="noreferrer"
-            >
-              GitHub
-            </a>{' '}
-            | <a href="/privacy-policy">Privacy policy</a>
-          </Typography>
-          <Typography variant="caption" sx={{ width: '100%' }}></Typography>
+          <MessagePaper />
         </>
       )}
     </>
