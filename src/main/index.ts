@@ -72,6 +72,9 @@ function createWindow(): void {
 
   mainWindow.on('close', () => {
     if (mainWindow && !mainWindow.isDestroyed()) {
+      // 最後のツリー状態を保存
+      mainWindow!.webContents.send('save-last-tree')
+
       // ウィンドウの状態を取得
       const isMaximized = mainWindow.isMaximized()
       mainWindow.unmaximize() // 最大化状態を解除

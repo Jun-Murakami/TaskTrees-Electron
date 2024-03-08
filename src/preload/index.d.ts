@@ -10,6 +10,8 @@ interface ExtendedElectronAPI extends BaseElectronAPI {
   saveTree: (callback: () => void) => void
   removeSaveTreeListener: () => void
   toggleMenuItem: (menuItemId: string, enabled: boolean) => void
+  saveLastTree: (callback: () => void) => void
+  removeSaveLastTreeListener: () => void
 }
 
 declare global {

@@ -14,7 +14,7 @@ import { useDialogStore } from '../store/dialogStore'
 import { useInputDialogStore } from '../store/dialogStore'
 import { useAppStateStore } from '../store/appStateStore'
 import { useTreeStateStore } from '../store/treeStateStore'
-import { useNativeMenu } from '@renderer/hooks/useNativeMenu'
+import { useElectron } from '@renderer/hooks/useElectron'
 import TaskTreesLogo from '../assets/TaskTrees.svg'
 
 export function HomePage() {
@@ -56,7 +56,7 @@ export function HomePage() {
   } = useTreeManagement()
 
   // メニューのイベントリスナーを登録するカスタムフック
-  useNativeMenu({
+  useElectron({
     handleCreateNewTree,
     handleLoadedContent,
     handleDownloadAppState

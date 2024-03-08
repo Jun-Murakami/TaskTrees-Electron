@@ -1,20 +1,25 @@
 import { useEffect } from 'react'
 import { useAppStateStore } from '../store/appStateStore'
 import { useTreeStateStore } from '../store/treeStateStore'
+import { useDatabase } from '../hooks/useDatabase'
 
-interface NativeMenuProps {
+interface ElectronProps {
   handleCreateNewTree: () => void
   handleLoadedContent: (data: string | null) => void
   handleDownloadAppState: () => void
 }
 
-export const useNativeMenu = ({
+export const useElectron = ({
   handleCreateNewTree,
   handleLoadedContent,
   handleDownloadAppState
-}: NativeMenuProps) => {
+}: ElectronProps) => {
   const isLoggedIn = useAppStateStore((state) => state.isLoggedIn)
   const currentTree = useTreeStateStore((state) => state.currentTree)
+
+  const items = useTreeStateStore((state) => state.items)
+
+  const { saveItemsDb } = useDatabase()
 
   // 新規ツリー作成のイベントリスナーを登録
   useEffect(() => {
@@ -22,9 +27,8 @@ export const useNativeMenu = ({
       handleCreateNewTree()
     })
 
-    // コンポーネントのアンマウント時にイベントリスナーを削除
     return () => {
-      window.electron.removeCreateNewTreeListener()
+      window.electron.removeCreateNewTreeListener() // コンポーネントのアンマウント時にイベントリスナーを削除
     }
   }, [handleCreateNewTree])
 
@@ -51,6 +55,7 @@ export const useNativeMenu = ({
     }
   }, [])
 
+  // ログイン状態によってメニューの有効無効を切り替える
   useEffect(() => {
     window.electron.toggleMenuItem('create-new-tree', isLoggedIn)
     window.electron.toggleMenuItem('import-tree', isLoggedIn)
@@ -60,4 +65,17 @@ export const useNativeMenu = ({
       window.electron.toggleMenuItem('save-tree', isLoggedIn)
     }
   }, [isLoggedIn, currentTree])
+
+  // アプリ終了時に現在のツリーを保存
+  useEffect(() => {
+    window.electron.saveLastTree(() => {
+      if (currentTree) {
+        saveItemsDb(items, currentTree)
+      }
+    })
+
+    return () => {
+      window.electron.removeSaveLastTreeListener()
+    }
+  }, [currentTree, saveItemsDb])
 }

@@ -24,7 +24,9 @@ if (process.contextIsolated) {
       saveTree: (callback) => ipcRenderer.on('save-tree', callback),
       removeSaveTreeListener: () => ipcRenderer.removeAllListeners('save-tree'),
       toggleMenuItem: (menuItemId, enabled) =>
-        ipcRenderer.send('toggle-menu-item', { menuItemId, enabled })
+        ipcRenderer.send('toggle-menu-item', { menuItemId, enabled }),
+      saveLastTree: (callback) => ipcRenderer.on('save-last-tree', callback),
+      removeSaveLastTreeListener: () => ipcRenderer.removeAllListeners('save-last-tree')
     })
     contextBridge.exposeInMainWorld('api', api)
   } catch (error) {
