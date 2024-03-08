@@ -1,7 +1,6 @@
 # TaskTrees-Electron
 
-ツリー型で整理可能なタスク管理アプリです。こちらはデスクトップアプリ版です。  
-※ソースコード上はMacOS版も完成していますが、アプリ署名の都合でバイナリ配布はまだ行っていません。
+ツリー型で整理可能なタスク管理アプリです。こちらはデスクトップアプリ版です。Windows、MacOSに対応しています。
 
 Webアプリ版  
 [https://github.com/Jun-Murakami/TaskTrees](https://github.com/Jun-Murakami/TaskTrees)
