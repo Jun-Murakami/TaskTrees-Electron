@@ -17,7 +17,7 @@ type AppState = {
   setIsWaitingForDelete: (isWaitingForDelete: boolean) => void;
   setIsAccordionExpanded: (isAccordionExpanded: boolean) => void;
   setIsFocusedTreeName: (isFocusedTreeName: boolean) => void;
-}
+};
 
 export const useAppStateStore = create<AppState>((set) => ({
   darkMode: false,

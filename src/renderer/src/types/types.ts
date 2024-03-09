@@ -18,6 +18,13 @@ export type TreesListItem = {
 
 export type TreesList = TreesListItem[];
 
+export type TreesListItemIncludingItems = {
+  id?: UniqueIdentifier;
+  name?: string;
+  members?: string[];
+  items: TreeItems;
+};
+
 export interface FlattenedItem extends TreeItem {
   parentId: UniqueIdentifier | null;
   depth: number;
@@ -33,4 +40,4 @@ export type AppState = {
   items: TreeItem[];
   hideDoneItems: boolean;
   darkMode: boolean;
-}
+};

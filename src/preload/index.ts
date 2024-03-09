@@ -1,8 +1,8 @@
-import { contextBridge, ipcRenderer } from 'electron'
-import { electronAPI } from '@electron-toolkit/preload'
+import { contextBridge, ipcRenderer } from 'electron';
+import { electronAPI } from '@electron-toolkit/preload';
 
 // Custom APIs for renderer
-const api = {}
+const api = {};
 
 // Use `contextBridge` APIs to expose Electron APIs to
 // renderer only if context isolation is enabled, otherwise
@@ -16,25 +16,26 @@ if (process.contextIsolated) {
       createNewTree: (callback) => ipcRenderer.on('create-new-tree', callback),
       removeCreateNewTreeListener: () => ipcRenderer.removeAllListeners('create-new-tree'),
       onLoadedContent: (callback: (data: string | null) => void) => {
-        ipcRenderer.on('loaded-content', (_, data) => callback(data))
+        ipcRenderer.on('loaded-content', (_, data) => callback(data));
       },
       removeLoadedContentListener: () => {
-        ipcRenderer.removeAllListeners('loaded-content')
+        ipcRenderer.removeAllListeners('loaded-content');
       },
       saveTree: (callback) => ipcRenderer.on('save-tree', callback),
       removeSaveTreeListener: () => ipcRenderer.removeAllListeners('save-tree'),
-      toggleMenuItem: (menuItemId, enabled) =>
-        ipcRenderer.send('toggle-menu-item', { menuItemId, enabled }),
+      saveAllTrees: (callback) => ipcRenderer.on('save-all-tree', callback),
+      removeSaveAllTreesListener: () => ipcRenderer.removeAllListeners('save-all-tree'),
+      toggleMenuItem: (menuItemId, enabled) => ipcRenderer.send('toggle-menu-item', { menuItemId, enabled }),
       saveLastTree: (callback) => ipcRenderer.on('save-last-tree', callback),
-      removeSaveLastTreeListener: () => ipcRenderer.removeAllListeners('save-last-tree')
-    })
-    contextBridge.exposeInMainWorld('api', api)
+      removeSaveLastTreeListener: () => ipcRenderer.removeAllListeners('save-last-tree'),
+    });
+    contextBridge.exposeInMainWorld('api', api);
   } catch (error) {
-    console.error(error)
+    console.error(error);
   }
 } else {
   // @ts-ignore (define in dts)
-  window.electron = electronAPI
+  window.electron = electronAPI;
   // @ts-ignore (define in dts)
-  window.api = api
+  window.api = api;
 }
