@@ -1,4 +1,4 @@
-# TaskTrees-Electron
+# TaskTrees-Desktop
 
 ツリー型で整理可能なタスク管理アプリです。こちらはデスクトップアプリ版です。Windows、MacOSに対応しています。
 
