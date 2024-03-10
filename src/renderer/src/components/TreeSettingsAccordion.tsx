@@ -36,6 +36,7 @@ interface TreeSettingsAccordionProps {
 }
 
 export function TreeSettingsAccordion({ deleteTree }: TreeSettingsAccordionProps) {
+  const setIsLoading = useAppStateStore((state) => state.setIsLoading);
   const isAccordionExpanded = useAppStateStore((state) => state.isAccordionExpanded);
   const setIsAccordionExpanded = useAppStateStore((state) => state.setIsAccordionExpanded);
   const isFocusedTreeName = useAppStateStore((state) => state.isFocusedTreeName);
@@ -118,9 +119,14 @@ export function TreeSettingsAccordion({ deleteTree }: TreeSettingsAccordionProps
         email,
         treeId: currentTree,
       });
-      return result.data;
+      setIsLoading(false);
+      return Promise.resolve(result.data);
     } catch (error) {
-      await showDialog('メンバーの追加に失敗しました。メールアドレスを確認して再度実行してください。' + error, 'IInformation');
+      await showDialog(
+        'メンバーの追加に失敗しました。メールアドレスを確認して再度実行してください。\n\n' + error,
+        'IInformation'
+      );
+      setIsLoading(false);
       return Promise.reject(error);
     }
   };
@@ -148,6 +154,7 @@ export function TreeSettingsAccordion({ deleteTree }: TreeSettingsAccordionProps
       );
     }
     if (result) {
+      setIsLoading(true);
       const functions = getFunctions();
       const removeUserFromTreeCallable = httpsCallable(functions, 'removeUserFromTree');
       try {
@@ -155,9 +162,11 @@ export function TreeSettingsAccordion({ deleteTree }: TreeSettingsAccordionProps
           treeId: currentTree,
           userId: uid,
         });
+        setIsLoading(false);
         return Promise.resolve(result.data);
       } catch (error) {
-        await showDialog('メンバーの削除に失敗しました。' + error, 'Error');
+        await showDialog('メンバーの削除に失敗しました。\n\n' + error, 'Error');
+        setIsLoading(false);
         return Promise.reject(error);
       }
     }
@@ -177,14 +186,7 @@ export function TreeSettingsAccordion({ deleteTree }: TreeSettingsAccordionProps
   };
 
   return (
-    <Box
-      sx={{
-        width: '100%',
-        maxWidth: '900px',
-        marginX: 'auto',
-        marginBottom: isAccordionExpanded ? { xs: 2, sm: 0 } : 0,
-      }}
-    >
+    <Box sx={{ width: '100%', maxWidth: '900px', marginX: 'auto', marginBottom: isAccordionExpanded ? { xs: 2, sm: 0 } : 0 }}>
       <Accordion
         sx={{
           marginBottom: 2,

@@ -1,20 +1,25 @@
-import { forwardRef, HTMLAttributes, useState, useEffect, useRef } from 'react';
+import { forwardRef, HTMLAttributes, useState, useEffect, useRef, useCallback } from 'react';
 import type { UniqueIdentifier } from '@dnd-kit/core';
 import { isDescendantOfTrash } from './utilities';
 import { useTheme } from '@mui/material/styles';
-import { ListItem, Stack, Badge, TextField, Checkbox, Button, Typography } from '@mui/material';
+import { ListItem, Stack, Badge, TextField, Checkbox, Button, Typography, IconButton } from '@mui/material';
 import KeyboardArrowDownIcon from '@mui/icons-material/KeyboardArrowDown';
 import DragHandleIcon from '@mui/icons-material/DragHandle';
 import DeleteIcon from '@mui/icons-material/Delete';
+import AttachFileIcon from '@mui/icons-material/AttachFile';
+import { useAttachedFile } from '../../hooks/useAttachedFile';
 import { useAppStateStore } from '../../store/appStateStore';
 import { useTreeStateStore } from '../../store/treeStateStore';
-import { MenuItems, MenuItemsTrash, MenuItemsTrashRoot } from './MenuItems';
+import { MenuItems, MenuItemsTrash, MenuItemsTrashRoot, MenuItemsAttachedFile } from './MenuItems';
 
 export interface TreeItemProps extends Omit<HTMLAttributes<HTMLLIElement>, 'id' | 'onChange' | 'onSelect'> {
   id: UniqueIdentifier;
+  value: string;
+  collapsed?: boolean;
+  done?: boolean;
+  attachedFile?: string;
   childCount?: number;
   clone?: boolean;
-  collapsed?: boolean;
   depth: number;
   disableInteraction?: boolean;
   disableSelection?: boolean;
@@ -24,16 +29,15 @@ export interface TreeItemProps extends Omit<HTMLAttributes<HTMLLIElement>, 'id' 
   };
   indicator?: boolean;
   indentationWidth: number;
-  value: string;
   onCollapse?(): void;
   onRemove?(): void;
   wrapperRef?(node: HTMLLIElement): void;
   onChange?(value: string): void;
   onChangeDone?(done: boolean): void;
-  done?: boolean;
   onCopyItems?(targetTreeId: UniqueIdentifier, targetTaskId: UniqueIdentifier): void;
   onMoveItems?(targetTreeId: UniqueIdentifier, targetTaskId: UniqueIdentifier): void;
   onRestoreItems?(id: UniqueIdentifier): void;
+  handleAttachFile(id: UniqueIdentifier, fileName: string): void;
   removeTrashDescendants?: () => Promise<void>;
   removeTrashDescendantsWithDone?: () => Promise<void>;
   onSelect?: (id: UniqueIdentifier) => void;
@@ -45,6 +49,10 @@ export const TreeItem = forwardRef<HTMLDivElement, TreeItemProps>(
   (
     {
       id,
+      value,
+      done,
+      collapsed,
+      attachedFile,
       childCount,
       clone,
       depth,
@@ -54,18 +62,16 @@ export const TreeItem = forwardRef<HTMLDivElement, TreeItemProps>(
       handleProps,
       indentationWidth,
       indicator,
-      collapsed,
       onCollapse,
       onRemove,
       style,
-      value,
       wrapperRef,
       onChange,
-      done,
       onChangeDone,
       onCopyItems,
       onMoveItems,
       onRestoreItems,
+      handleAttachFile,
       removeTrashDescendants,
       removeTrashDescendantsWithDone,
       onSelect,
@@ -78,11 +84,45 @@ export const TreeItem = forwardRef<HTMLDivElement, TreeItemProps>(
     const theme = useTheme();
     const items = useTreeStateStore((state) => state.items);
     const currentTree = useTreeStateStore((state) => state.currentTree);
+    const [isDragOver, setIsDragOver] = useState(false);
     const [isFocusedOrHovered, setIsFocusedOrHovered] = useState(false);
+
+    const { uploadFile } = useAttachedFile();
 
     const darkMode = useAppStateStore((state) => state.darkMode);
 
     const inputRef = useRef<HTMLInputElement>(null);
+
+    const onDrop = useCallback(
+      async (event: React.DragEvent<HTMLDivElement>) => {
+        event.preventDefault();
+        event.stopPropagation();
+        setIsDragOver(false);
+        if (event.dataTransfer.files && event.dataTransfer.files.length > 0) {
+          const files = Array.from(event.dataTransfer.files);
+          const fileName = await uploadFile(files[0]);
+          if (fileName) {
+            handleAttachFile(id, fileName);
+          }
+          event.dataTransfer.clearData();
+        }
+      },
+      [uploadFile, handleAttachFile, id]
+    );
+
+    const onDragOver = useCallback((event: React.DragEvent<HTMLDivElement>) => {
+      event.preventDefault();
+      event.stopPropagation();
+      // ドラッグ中の要素がドロップ可能であることを示す
+      event.dataTransfer.dropEffect = 'move';
+      setIsDragOver(true);
+    }, []);
+
+    const onDragLeave = useCallback((event: React.DragEvent<HTMLDivElement>) => {
+      event.preventDefault();
+      event.stopPropagation();
+      setIsDragOver(false);
+    }, []);
 
     useEffect(() => {
       if (addedTaskId === id && inputRef.current) {
@@ -109,25 +149,27 @@ export const TreeItem = forwardRef<HTMLDivElement, TreeItemProps>(
       width: '100%',
       p: 1,
       border: '1px solid',
-      backgroundColor: darkMode
-        ? depth >= 4
-          ? theme.palette.grey[800]
-          : depth === 3
-            ? '#303030'
-            : depth === 2
-              ? theme.palette.grey[900]
-              : depth === 1
-                ? '#1a1a1a'
-                : theme.palette.background.default
-        : depth >= 4
-          ? theme.palette.grey[300]
-          : depth === 3
-            ? theme.palette.grey[200]
-            : depth === 2
-              ? theme.palette.grey[100]
-              : depth === 1
-                ? theme.palette.grey[50]
-                : theme.palette.background.default,
+      backgroundColor: isDragOver
+        ? theme.palette.action.focus
+        : darkMode
+          ? depth >= 4
+            ? theme.palette.grey[800]
+            : depth === 3
+              ? '#303030'
+              : depth === 2
+                ? theme.palette.grey[900]
+                : depth === 1
+                  ? '#1a1a1a'
+                  : theme.palette.background.default
+          : depth >= 4
+            ? theme.palette.grey[300]
+            : depth === 3
+              ? theme.palette.grey[200]
+              : depth === 2
+                ? theme.palette.grey[100]
+                : depth === 1
+                  ? theme.palette.grey[50]
+                  : theme.palette.background.default,
       borderColor: theme.palette.divider,
       boxSizing: 'border-box',
       ...(clone && {
@@ -200,7 +242,15 @@ export const TreeItem = forwardRef<HTMLDivElement, TreeItemProps>(
         }}
         {...props}
       >
-        <Stack direction='row' ref={ref} style={style} sx={stackStyles(clone, ghost)}>
+        <Stack
+          direction='row'
+          ref={ref}
+          style={style}
+          sx={stackStyles(clone, ghost)}
+          onDrop={onDrop}
+          onDragOver={onDragOver}
+          onDragLeave={onDragLeave}
+        >
           {id !== 'trash' ? (
             <Button
               sx={{
@@ -273,13 +323,26 @@ export const TreeItem = forwardRef<HTMLDivElement, TreeItemProps>(
                   setTimeout(() => setIsFocusedOrHovered(false), 300);
                 }}
               />
+              {!clone && isDragOver && (
+                <IconButton
+                  sx={{
+                    color: theme.palette.grey[500],
+                    ...buttonStyle,
+                  }}
+                >
+                  <AttachFileIcon />
+                </IconButton>
+              )}
+              {!clone && attachedFile && <MenuItemsAttachedFile attachedFile={attachedFile} />}
               {!clone && onRemove && !isDescendantOfTrash(items, id) ? (
                 <MenuItems
                   onRemove={onRemove}
+                  handleAttachFile={handleAttachFile}
                   onCopyItems={onCopyItems}
                   onMoveItems={onMoveItems}
                   currenTreeId={currentTree}
                   id={id}
+                  attachedFile={attachedFile}
                 />
               ) : (
                 <MenuItemsTrash onRemove={onRemove} onRestoreItems={onRestoreItems} id={id} />
