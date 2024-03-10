@@ -60,6 +60,7 @@ export function HomePage() {
   const theme = useTheme();
 
   const loginButtonRef = useRef<HTMLButtonElement>(null);
+  const drawerWidth = 300;
 
   return (
     <>
@@ -79,9 +80,12 @@ export function HomePage() {
             />
             <Box
               sx={{
-                marginLeft: { sm: '240px' }, // smサイズの時だけ左マージンを240pxに設定
-                width: { xs: '100%', sm: 'calc(100% - 240px)' }, // smサイズの時だけ幅をResponsiveDrawerの幅を考慮して調整}}
+                maxWidth: '900px',
+                mx: 'auto',
                 minHeight: currentTree !== null ? '100vh' : 'auto',
+                '@media (max-width: 1546px)': {
+                  ml: { xs: 'auto', sm: `${drawerWidth}px` },
+                },
               }}
             >
               {currentTree ? (
@@ -102,7 +106,7 @@ export function HomePage() {
                   sx={{
                     position: 'fixed',
                     display: 'block',
-                    left: { xs: 'calc(50vw - 20px)', sm: 'calc(50vw + 100px)' },
+                    left: 'calc(50% - 20px)',
                     top: '50vh',
                     zIndex: 1400,
                   }}
@@ -142,62 +146,11 @@ export function HomePage() {
         <>
           <TaskTreesLogo />
           {isLoading ? (
-            <CircularProgress
-              sx={{
-                marginY: 4,
-                display: 'block',
-                marginX: 'auto',
-              }}
-            />
+            <CircularProgress sx={{ marginY: 4, display: 'block', marginX: 'auto' }} />
           ) : (
-            <Stack spacing={2} sx={{ width: 400, marginX: 'auto', justifyContent: 'center' }}>
-              <TextField
-                label='メールアドレス'
-                variant='outlined'
-                margin='normal'
-                value={email}
-                size='small'
-                onChange={(e) => setEmail(e.target.value)}
-                onKeyDown={(e) => {
-                  if (e.key === 'Enter') {
-                    loginButtonRef.current?.click();
-                  }
-                }}
-              />
-              <TextField
-                label='パスワード'
-                variant='outlined'
-                margin='normal'
-                type='password'
-                value={password}
-                size='small'
-                onChange={(e) => setPassword(e.target.value)}
-                onKeyDown={(e) => {
-                  if (e.key === 'Enter') {
-                    loginButtonRef.current?.click();
-                  }
-                }}
-              />
-              <Button ref={loginButtonRef} onClick={() => handleLogin(email, password)} variant={'contained'}>
-                ログイン
-              </Button>
-              <Button onClick={() => handleSignup(email, password)} variant={'outlined'} size='small'>
-                サインアップ
-              </Button>
-              <Button onClick={() => handleResetPassword(email)} variant={'outlined'} size='small'>
-                パスワードをリセット
-              </Button>
-              <Typography variant='caption' sx={{ marginY: 4 }}>
-                <a href='https://tasktree-s.web.app' target='_blank'>
-                  Web版
-                </a>
-                を先にご利用の方は、最初にメールアドレスを入力して
-                <br />
-                パスワードをリセットしてください。
-                <br />
-                ※ツリーデータはデスクトップ版とWebアプリ版で共有されます。
-              </Typography>
-            </Stack>
+            <Button onClick={() => handleLogin()} variant={'contained'}>
+              Googleでログイン
+            </Button>
           )}
           {systemMessage && (
             <Box
