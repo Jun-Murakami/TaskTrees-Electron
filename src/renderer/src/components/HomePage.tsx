@@ -146,11 +146,62 @@ export function HomePage() {
         <>
           <TaskTreesLogo />
           {isLoading ? (
-            <CircularProgress sx={{ marginY: 4, display: 'block', marginX: 'auto' }} />
+            <CircularProgress
+              sx={{
+                marginY: 4,
+                display: 'block',
+                marginX: 'auto',
+              }}
+            />
           ) : (
-            <Button onClick={() => handleLogin()} variant={'contained'}>
-              Googleでログイン
-            </Button>
+            <Stack spacing={2} sx={{ width: 400, marginX: 'auto', justifyContent: 'center' }}>
+              <TextField
+                label='メールアドレス'
+                variant='outlined'
+                margin='normal'
+                value={email}
+                size='small'
+                onChange={(e) => setEmail(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') {
+                    loginButtonRef.current?.click();
+                  }
+                }}
+              />
+              <TextField
+                label='パスワード'
+                variant='outlined'
+                margin='normal'
+                type='password'
+                value={password}
+                size='small'
+                onChange={(e) => setPassword(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') {
+                    loginButtonRef.current?.click();
+                  }
+                }}
+              />
+              <Button ref={loginButtonRef} onClick={() => handleLogin(email, password)} variant={'contained'}>
+                ログイン
+              </Button>
+              <Button onClick={() => handleSignup(email, password)} variant={'outlined'} size='small'>
+                サインアップ
+              </Button>
+              <Button onClick={() => handleResetPassword(email)} variant={'outlined'} size='small'>
+                パスワードをリセット
+              </Button>
+              <Typography variant='caption' sx={{ marginY: 4 }}>
+                <a href='https://tasktree-s.web.app' target='_blank'>
+                  Web版
+                </a>
+                を先にご利用の方は、最初にメールアドレスを入力して
+                <br />
+                パスワードをリセットしてください。
+                <br />
+                ※ツリーデータはデスクトップ版とWebアプリ版で共有されます。
+              </Typography>
+            </Stack>
           )}
           {systemMessage && (
             <Box
