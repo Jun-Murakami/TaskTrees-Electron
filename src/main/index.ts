@@ -1,6 +1,6 @@
 import { app, shell, BrowserWindow, ipcMain, nativeTheme, Menu, dialog } from 'electron';
 import fs from 'fs';
-import { join } from 'path';
+import path, { join } from 'path';
 import { electronApp, optimizer, is } from '@electron-toolkit/utils';
 import contextMenu from 'electron-context-menu';
 import icon from '../../resources/icon.png?asset';
@@ -74,6 +74,8 @@ function createWindow(): void {
     if (mainWindow && !mainWindow.isDestroyed()) {
       // 最後のツリー状態を保存
       mainWindow!.webContents.send('save-last-tree');
+
+      // 全ツリーをバックアップ
 
       // ウィンドウの状態を取得
       const isMaximized = mainWindow.isMaximized();
@@ -203,6 +205,32 @@ app.whenReady().then(() => {
     const menuItem = Menu.getApplicationMenu()!.getMenuItemById(menuItemId);
     if (menuItem) {
       menuItem.enabled = enabled;
+    }
+  });
+
+  // レンダラーからバックアップjsonを受け取り、ファイルとして保存
+  function getCurrentDateTime() {
+    const now = new Date();
+    return `${now.getFullYear()}${String(now.getMonth() + 1).padStart(2, '0')}${String(now.getDate()).padStart(2, '0')}${String(now.getHours()).padStart(2, '0')}${String(now.getMinutes()).padStart(2, '0')}`;
+  }
+
+  ipcMain.on('save-backup', (_, { data }) => {
+    const userDataPath = app.getPath('userData');
+    const backupsFolderPath = path.join(userDataPath, 'Backups');
+    if (!fs.existsSync(backupsFolderPath)) {
+      fs.mkdirSync(backupsFolderPath, { recursive: true });
+    }
+    const filePath = join(backupsFolderPath, `TaskTrees_Backup_${getCurrentDateTime()}.json`);
+    fs.writeFileSync(filePath, data, 'utf8');
+    // バックアップファイルをリストアップし、14個以上あれば古いものから削除
+    const files = fs
+      .readdirSync(userDataPath)
+      .filter((file) => file.startsWith('TaskTrees_Backup_'))
+      .sort((a, b) => a.localeCompare(b));
+    if (files.length > 14) {
+      files.slice(0, files.length - 14).forEach((file) => {
+        fs.unlinkSync(join(userDataPath, file));
+      });
     }
   });
 

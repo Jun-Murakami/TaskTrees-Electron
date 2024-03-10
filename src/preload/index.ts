@@ -28,6 +28,7 @@ if (process.contextIsolated) {
       toggleMenuItem: (menuItemId, enabled) => ipcRenderer.send('toggle-menu-item', { menuItemId, enabled }),
       saveLastTree: (callback) => ipcRenderer.on('save-last-tree', callback),
       removeSaveLastTreeListener: () => ipcRenderer.removeAllListeners('save-last-tree'),
+      saveBackup: (data) => ipcRenderer.send('save-backup', { data }),
     });
     contextBridge.exposeInMainWorld('api', api);
   } catch (error) {

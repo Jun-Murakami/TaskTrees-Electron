@@ -7,7 +7,7 @@ interface ElectronProps {
   handleCreateNewTree: () => void;
   handleLoadedContent: (data: string | null) => void;
   handleDownloadTreeState: () => void;
-  handleDownloadAllTrees: () => void;
+  handleDownloadAllTrees: (isSilent?: boolean) => Promise<string>;
 }
 
 export const useElectron = ({
@@ -46,23 +46,23 @@ export const useElectron = ({
 
   // ツリーの保存のイベントリスナーを登録
   useEffect(() => {
-    window.electron.saveTree(() => {
-      handleDownloadTreeState();
+    window.electron.saveTree(async () => {
+      await handleDownloadTreeState();
     });
     return () => {
       window.electron.removeSaveTreeListener();
     };
-  }, []);
+  }, [handleDownloadTreeState]);
 
   // 全ツリーの保存のイベントリスナーを登録
   useEffect(() => {
-    window.electron.saveAllTrees(() => {
-      handleDownloadAllTrees();
+    window.electron.saveAllTrees(async () => {
+      await handleDownloadAllTrees();
     });
     return () => {
       window.electron.removeSaveAllTreesListener();
     };
-  }, []);
+  }, [handleDownloadAllTrees]);
 
   // ログイン状態によってメニューの有効無効を切り替える
   useEffect(() => {
@@ -75,6 +75,36 @@ export const useElectron = ({
     }
     window.electron.toggleMenuItem('save-all-tree', isLoggedIn);
   }, [isLoggedIn, currentTree]);
+
+  // ログインしたらタイマーをセットしてデータをバックアップ
+  useEffect(() => {
+    if (isLoggedIn) {
+      const asyncRun = async () => {
+        const data = await handleDownloadAllTrees(true);
+        if (data && typeof data === 'string') {
+          window.electron.saveBackup(data);
+        }
+      };
+      // ログインしてから10秒後にバックアップを作成
+      const timer = setTimeout(asyncRun, 1000 * 10);
+
+      // タイマーをセットして24時間ごとにバックアップを作成
+      const timer2 = setInterval(
+        async () => {
+          const data = await handleDownloadAllTrees(true);
+          if (data && typeof data === 'string') {
+            window.electron.saveBackup(data);
+          }
+        },
+        1000 * 60 * 60 * 24
+      );
+      return () => {
+        clearTimeout(timer);
+        clearInterval(timer2);
+      };
+    }
+    return () => {};
+  }, [isLoggedIn, handleDownloadAllTrees]);
 
   // アプリ終了時に現在のツリーを保存
   useEffect(() => {
