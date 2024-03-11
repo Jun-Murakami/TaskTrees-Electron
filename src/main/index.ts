@@ -36,6 +36,12 @@ function createWindow(): void {
     }
   }
 
+  // バックアップを保存するフォルダを作成
+  const backupsFolderPath = path.join(userDataPath, 'Backups');
+  if (!fs.existsSync(backupsFolderPath)) {
+    fs.mkdirSync(backupsFolderPath, { recursive: true });
+  }
+
   mainWindow = new BrowserWindow({
     width: 900,
     height: 800,
@@ -70,12 +76,14 @@ function createWindow(): void {
     mainWindow.loadFile(join(__dirname, '../renderer/index.html'));
   }
 
-  mainWindow.on('close', () => {
+  mainWindow.on('close', (e) => {
+    e.preventDefault(); // デフォルトの閉じる動作をキャンセル
     if (mainWindow && !mainWindow.isDestroyed()) {
       // 最後のツリー状態を保存
-      mainWindow!.webContents.send('save-last-tree');
+      mainWindow.webContents.send('save-last-tree');
 
       // 全ツリーをバックアップ
+      mainWindow.webContents.send('before-close');
 
       // ウィンドウの状態を取得
       const isMaximized = mainWindow.isMaximized();
@@ -178,6 +186,14 @@ app.whenReady().then(() => {
           },
         },
         { type: 'separator' },
+        {
+          label: 'バックアップフォルダを表示',
+          click: (): void => {
+            const backupsFolderPath = path.join(app.getPath('userData'), 'Backups');
+            shell.openPath(backupsFolderPath);
+          },
+        },
+        { type: 'separator' },
         { label: '終了', role: 'quit' as const }, // 'as const'を使用してroleの値がリテラル型であることを明示
       ],
     },
@@ -214,7 +230,7 @@ app.whenReady().then(() => {
     return `${now.getFullYear()}${String(now.getMonth() + 1).padStart(2, '0')}${String(now.getDate()).padStart(2, '0')}${String(now.getHours()).padStart(2, '0')}${String(now.getMinutes()).padStart(2, '0')}`;
   }
 
-  ipcMain.on('save-backup', (_, { data }) => {
+  function saveBackup(data: string) {
     const userDataPath = app.getPath('userData');
     const backupsFolderPath = path.join(userDataPath, 'Backups');
     if (!fs.existsSync(backupsFolderPath)) {
@@ -222,16 +238,27 @@ app.whenReady().then(() => {
     }
     const filePath = join(backupsFolderPath, `TaskTrees_Backup_${getCurrentDateTime()}.json`);
     fs.writeFileSync(filePath, data, 'utf8');
-    // バックアップファイルをリストアップし、14個以上あれば古いものから削除
+    // バックアップファイルをリストアップし、50個以上あれば古いものから削除
     const files = fs
-      .readdirSync(userDataPath)
+      .readdirSync(backupsFolderPath)
       .filter((file) => file.startsWith('TaskTrees_Backup_'))
       .sort((a, b) => a.localeCompare(b));
-    if (files.length > 14) {
-      files.slice(0, files.length - 14).forEach((file) => {
-        fs.unlinkSync(join(userDataPath, file));
+    if (files.length > 50) {
+      files.slice(0, files.length - 50).forEach((file) => {
+        fs.unlinkSync(join(backupsFolderPath, file));
       });
     }
+  }
+
+  // データをバックアップしてからウィンドウを閉じる
+  ipcMain.on('close-completed', (_, data) => {
+    saveBackup(data);
+    mainWindow?.destroy(); // ウィンドウを強制的に閉じる
+  });
+
+  // データをバックアップ
+  ipcMain.on('save-backup', (_, { data }) => {
+    saveBackup(data);
   });
 
   createWindow();

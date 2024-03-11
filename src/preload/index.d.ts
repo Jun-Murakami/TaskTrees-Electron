@@ -15,6 +15,10 @@ interface ExtendedElectronAPI extends BaseElectronAPI {
   saveLastTree: (callback: () => void) => void;
   removeSaveLastTreeListener: () => void;
   saveBackup: (data: string) => void;
+  closeWindow: () => void;
+  onBeforeClose: (callback: () => void) => void;
+  removeBeforeCloseListener: () => void;
+  sendCloseCompleted: (data: string) => void;
 }
 
 declare global {

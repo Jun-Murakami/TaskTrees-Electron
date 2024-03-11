@@ -29,6 +29,10 @@ if (process.contextIsolated) {
       saveLastTree: (callback) => ipcRenderer.on('save-last-tree', callback),
       removeSaveLastTreeListener: () => ipcRenderer.removeAllListeners('save-last-tree'),
       saveBackup: (data) => ipcRenderer.send('save-backup', { data }),
+      closeWindow: () => ipcRenderer.send('close-window'),
+      onBeforeClose: (callback) => ipcRenderer.on('before-close', callback),
+      removeBeforeCloseListener: () => ipcRenderer.removeAllListeners('before-close'),
+      sendCloseCompleted: (data) => ipcRenderer.send('close-completed', data),
     });
     contextBridge.exposeInMainWorld('api', api);
   } catch (error) {

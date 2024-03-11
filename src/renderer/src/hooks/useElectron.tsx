@@ -76,6 +76,20 @@ export const useElectron = ({
     window.electron.toggleMenuItem('save-all-tree', isLoggedIn);
   }, [isLoggedIn, currentTree]);
 
+  // アプリ終了時に全ツリーを保存
+  useEffect(() => {
+    window.electron.onBeforeClose(async () => {
+      const data = await handleDownloadAllTrees(true);
+      if (data && typeof data === 'string') {
+        window.electron.sendCloseCompleted(data);
+      }
+    });
+
+    return () => {
+      window.electron.removeBeforeCloseListener();
+    };
+  }, [handleDownloadAllTrees]);
+
   // ログインしたらタイマーをセットしてデータをバックアップ
   useEffect(() => {
     if (isLoggedIn) {
@@ -88,7 +102,7 @@ export const useElectron = ({
       // ログインしてから10秒後にバックアップを作成
       const timer = setTimeout(asyncRun, 1000 * 10);
 
-      // タイマーをセットして24時間ごとにバックアップを作成
+      // タイマーをセットして8時間ごとにバックアップを作成
       const timer2 = setInterval(
         async () => {
           const data = await handleDownloadAllTrees(true);
@@ -96,7 +110,7 @@ export const useElectron = ({
             window.electron.saveBackup(data);
           }
         },
-        1000 * 60 * 60 * 24
+        1000 * 60 * 60 * 8
       );
       return () => {
         clearTimeout(timer);
