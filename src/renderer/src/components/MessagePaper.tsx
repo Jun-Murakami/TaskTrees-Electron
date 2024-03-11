@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Paper, Typography, Divider } from '@mui/material';
+import { Paper, Typography, Divider, Box } from '@mui/material';
 import { useAppStateStore } from '../store/appStateStore';
 
 export const MessagePaper = () => {
@@ -54,7 +54,7 @@ export const MessagePaper = () => {
   }, [currentVersion, latestVersion]);
 
   return (
-    <>
+    <Box sx={{ textAlign: 'center' }}>
       <Paper sx={{ maxWidth: 400, margin: 'auto', marginTop: 4 }}>
         <Typography variant='body2' sx={{ textAlign: 'left', p: 2 }} gutterBottom>
           ver{currentVersion}
@@ -83,7 +83,7 @@ export const MessagePaper = () => {
           </>
         )}
       </Paper>
-      <Typography variant='caption' sx={{ width: '100%', minWidth: '100%' }}>
+      <Typography variant='caption' sx={{ width: '100%', minWidth: '100%', textAlign: 'center' }}>
         <a href='mailto:app@bucketrelay.com' target='_blank' rel='noreferrer'>
           ©{new Date().getFullYear()} Jun Murakami
         </a>{' '}
@@ -97,6 +97,6 @@ export const MessagePaper = () => {
         </a>
       </Typography>
       <Typography variant='caption' sx={{ width: '100%' }}></Typography>
-    </>
+    </Box>
   );
 };

@@ -51,7 +51,7 @@ function createWindow(): void {
   mainWindow = new BrowserWindow({
     width: 900,
     height: 800,
-    minWidth: 700,
+    minWidth: 770,
     minHeight: 400,
     ...windowState.bounds, // 保存されたウィンドウの位置とサイズを適用
     ...(process.platform === 'linux' ? { icon } : {}),
