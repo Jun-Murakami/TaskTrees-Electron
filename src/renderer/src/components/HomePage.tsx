@@ -80,7 +80,10 @@ export function HomePage() {
             />
             <Box
               sx={{
-                maxWidth: '900px',
+                maxWidth: '930px',
+                px: '15px',
+                pt: 0,
+                pb: '60px',
                 mx: 'auto',
                 minHeight: currentTree !== null ? '100vh' : 'auto',
                 '@media (max-width: 1546px)': {
@@ -111,9 +114,9 @@ export function HomePage() {
                       left: { xs: 'calc(50% - 20px)', sm: '745px' },
                     },
                     '@media (max-width: 1249px)': {
-                      left: { xs: 'calc(50% - 20px)', sm: 'calc((100vw - 300px) / 2 + 270px)' },
+                      left: { xs: 'calc(50% - 20px)', sm: 'calc((100vw - (100vw - 100%) - 300px) / 2 + 300px - 20px)' },
                     },
-                    top: '50vh',
+                    top: 'calc(50vh - 20px)',
                     zIndex: 1400,
                   }}
                 />
@@ -152,13 +155,7 @@ export function HomePage() {
         <>
           <TaskTreesLogo />
           {isLoading ? (
-            <CircularProgress
-              sx={{
-                marginY: 4,
-                display: 'block',
-                marginX: 'auto',
-              }}
-            />
+            <CircularProgress sx={{ marginY: 4, display: 'block', marginX: 'auto' }} />
           ) : (
             <Stack spacing={2} sx={{ width: 400, marginX: 'auto', justifyContent: 'center' }}>
               <TextField
