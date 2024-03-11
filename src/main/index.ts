@@ -21,6 +21,12 @@ contextMenu({
   showInspectElement: is.dev,
 });
 
+let isQuitting = false;
+
+app.on('before-quit', () => {
+  isQuitting = true; // アプリケーションが終了しようとしていることを示すフラグを設定
+});
+
 function createWindow(): void {
   // 保存されたウィンドウの状態を読み込む
   const fs = require('fs');
@@ -77,7 +83,9 @@ function createWindow(): void {
   }
 
   mainWindow.on('close', (e) => {
-    e.preventDefault(); // デフォルトの閉じる動作をキャンセル
+    // Mac以外でデフォルトの閉じる動作をキャンセル
+    e.preventDefault();
+
     if (mainWindow && !mainWindow.isDestroyed()) {
       // 最後のツリー状態を保存
       mainWindow.webContents.send('save-last-tree');
@@ -254,6 +262,9 @@ app.whenReady().then(() => {
   ipcMain.on('close-completed', (_, data) => {
     saveBackup(data);
     mainWindow?.destroy(); // ウィンドウを強制的に閉じる
+    if (isQuitting) {
+      app?.quit(); // アプリケーションを終了
+    }
   });
 
   // データをバックアップ
