@@ -275,7 +275,7 @@ export const useTreeManagement = () => {
   useEffect(() => {
     const asyncFunc = async () => {
       if (missingTrees) {
-        showDialog('1つ以上のツリーが他のユーザーまたはシステムによって削除されました。\n\n' + missingTrees, 'Information');
+        await showDialog('1つ以上のツリーが他のユーザーまたはシステムによって削除されました。\n\n' + missingTrees, 'Information');
         const user = getAuth().currentUser;
         if (!user) {
           return;
