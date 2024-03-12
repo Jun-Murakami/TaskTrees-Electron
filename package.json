@@ -3,7 +3,7 @@
   "version": "1.0.10",
   "description": "An Electron application with React and TypeScript",
   "main": "./out/main/index.js",
-  "author": "JunMurakkami",
+  "author": "JunMurakami",
   "homepage": "https://tasktree-s.web.app/",
   "scripts": {
     "format": "prettier --write .",
