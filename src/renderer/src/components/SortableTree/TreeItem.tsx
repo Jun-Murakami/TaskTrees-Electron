@@ -139,37 +139,37 @@ export const TreeItem = forwardRef<HTMLDivElement, TreeItemProps>(
 
     // ボタンの共通スタイルを定義
     const buttonStyle = {
-      width: '30px',
-      minWidth: '30px',
+      width: `${indentationWidth}px`,
+      minWidth: `${indentationWidth}px`,
       height: '30px',
       marginTop: '0px',
     };
 
     const stackStyles = (clone: boolean | undefined, ghost: boolean | undefined) => ({
       width: '100%',
-      p: 1,
+      padding: { xs: 0.7, sm: 1 },
       border: '1px solid',
       backgroundColor: isDragOver
         ? theme.palette.action.focus
         : darkMode
-          ? depth >= 4
-            ? theme.palette.grey[800]
-            : depth === 3
-              ? '#303030'
-              : depth === 2
-                ? theme.palette.grey[900]
-                : depth === 1
-                  ? '#1a1a1a'
-                  : theme.palette.background.default
-          : depth >= 4
-            ? theme.palette.grey[300]
-            : depth === 3
-              ? theme.palette.grey[200]
-              : depth === 2
-                ? theme.palette.grey[100]
-                : depth === 1
-                  ? theme.palette.grey[50]
-                  : theme.palette.background.default,
+        ? depth >= 4
+          ? theme.palette.grey[800]
+          : depth === 3
+          ? '#303030'
+          : depth === 2
+          ? theme.palette.grey[900]
+          : depth === 1
+          ? '#1a1a1a'
+          : theme.palette.background.default
+        : depth >= 4
+        ? theme.palette.grey[300]
+        : depth === 3
+        ? theme.palette.grey[200]
+        : depth === 2
+        ? theme.palette.grey[100]
+        : depth === 1
+        ? theme.palette.grey[50]
+        : theme.palette.background.default,
       borderColor: theme.palette.divider,
       boxSizing: 'border-box',
       ...(clone && {
@@ -275,8 +275,8 @@ export const TreeItem = forwardRef<HTMLDivElement, TreeItemProps>(
           {onCollapse && (
             <Button
               sx={{
-                color: theme.palette.grey[500],
                 ...buttonStyle,
+                color: theme.palette.grey[500],
               }}
               onClick={() => {
                 onCollapse?.();
@@ -294,7 +294,7 @@ export const TreeItem = forwardRef<HTMLDivElement, TreeItemProps>(
           {id !== 'trash' ? (
             <>
               <Checkbox
-                sx={{ ...buttonStyle }}
+                sx={{ ...buttonStyle, color: darkMode ? theme.palette.grey[400] : theme.palette.grey[600] }}
                 checked={done}
                 onClick={() => id !== undefined && onSelect?.(id)}
                 onChange={(e) => onChangeDone?.(e.target.checked)}
@@ -307,7 +307,7 @@ export const TreeItem = forwardRef<HTMLDivElement, TreeItemProps>(
                 onClick={() => id !== undefined && onSelect?.(id)}
                 multiline
                 fullWidth
-                sx={{ padding: 0, margin: 'auto 0', marginX: 1 }}
+                sx={{ padding: 0, margin: 'auto 0', marginX: { xs: 0.75, sm: 1 } }}
                 InputProps={{
                   disableUnderline: !isFocusedOrHovered,
                   style: {

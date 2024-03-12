@@ -21,12 +21,6 @@ contextMenu({
   showInspectElement: is.dev,
 });
 
-let isQuitting = false;
-
-app.on('before-quit', () => {
-  isQuitting = true; // アプリケーションが終了しようとしていることを示すフラグを設定
-});
-
 function createWindow(): void {
   // 保存されたウィンドウの状態を読み込む
   const fs = require('fs');
@@ -232,6 +226,12 @@ app.whenReady().then(() => {
     }
   });
 
+  let isQuitting = false;
+
+  app.on('before-quit', () => {
+    isQuitting = true; // アプリケーションが終了しようとしていることを示すフラグを設定
+  });
+
   // レンダラーからバックアップjsonを受け取り、ファイルとして保存
   function getCurrentDateTime() {
     const now = new Date();
@@ -260,7 +260,9 @@ app.whenReady().then(() => {
 
   // データをバックアップしてからウィンドウを閉じる
   ipcMain.on('close-completed', (_, data) => {
-    saveBackup(data);
+    if (data !== 'error') {
+      saveBackup(data);
+    }
     mainWindow?.destroy(); // ウィンドウを強制的に閉じる
     if (isQuitting) {
       app?.quit(); // アプリケーションを終了

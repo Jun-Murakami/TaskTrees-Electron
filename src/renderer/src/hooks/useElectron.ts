@@ -79,9 +79,15 @@ export const useElectron = ({
   // アプリ終了時に全ツリーを保存
   useEffect(() => {
     window.electron.onBeforeClose(async () => {
-      const data = await handleDownloadAllTrees(true);
-      if (data && typeof data === 'string') {
-        window.electron.sendCloseCompleted(data);
+      try {
+        const data = await handleDownloadAllTrees(true);
+        if (data && typeof data === 'string') {
+          window.electron.sendCloseCompleted(data);
+        } else {
+          window.electron.sendCloseCompleted('error');
+        }
+      } catch (error) {
+        window.electron.sendCloseCompleted('error');
       }
     });
 
