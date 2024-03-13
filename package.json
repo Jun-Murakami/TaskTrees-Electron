@@ -1,7 +1,7 @@
 {
   "name": "tasktrees-electron",
-  "version": "1.0.11",
-  "description": "An Electron application with React and TypeScript",
+  "version": "1.0.12",
+  "description": "Tree-type task management and memo application",
   "main": "./out/main/index.js",
   "author": "JunMurakami",
   "homepage": "https://tasktree-s.web.app/",
