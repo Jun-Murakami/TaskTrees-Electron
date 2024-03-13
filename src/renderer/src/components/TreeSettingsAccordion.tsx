@@ -36,6 +36,7 @@ interface TreeSettingsAccordionProps {
 }
 
 export function TreeSettingsAccordion({ deleteTree }: TreeSettingsAccordionProps) {
+  const darkMode = useAppStateStore((state) => state.darkMode);
   const setIsLoading = useAppStateStore((state) => state.setIsLoading);
   const isAccordionExpanded = useAppStateStore((state) => state.isAccordionExpanded);
   const setIsAccordionExpanded = useAppStateStore((state) => state.setIsAccordionExpanded);
@@ -186,18 +187,41 @@ export function TreeSettingsAccordion({ deleteTree }: TreeSettingsAccordionProps
   };
 
   return (
-    <Box sx={{ width: '100%', maxWidth: '900px', marginX: 'auto', marginBottom: isAccordionExpanded ? { xs: 2, sm: 0 } : 0 }}>
+    <Box
+      sx={{
+        position: 'fixed',
+        top: 0,
+        zIndex: 1000,
+        width: '100%',
+        '@media (min-width: 1546px)': {
+          left: '50%',
+          transform: 'translateX(-50%)',
+          maxWidth: '900px',
+        },
+        '@media (min-width: 1249px) and (max-width: 1546px)': {
+          left: { xs: '50%', sm: '315px' },
+          maxWidth: '900px',
+        },
+        '@media (max-width: 1249px)': {
+          left: { xs: '50%', sm: '315px' },
+          transform: { xs: 'translateX(-50%)', sm: 'none' },
+          maxWidth: { xs: 'calc(100vw - (100vw - 100%) - 30px)', sm: 'calc(100vw - (100vw - 100%) - 330px)' },
+        },
+        marginX: 'auto',
+      }}
+    >
       <Accordion
         sx={{
-          marginBottom: 2,
           marginTop: 0,
-          '& .MuiPaper-root': {
-            borderRadius: '0 0 8px 8px !important',
-            backgroundColor: 'transparent !important',
-          },
-          '& .MuiButtonBase-root': {
-            backgroundColor: 'transparent !important',
-          },
+          backgroundColor: darkMode
+            ? isAccordionExpanded
+              ? 'rgba(18, 18, 18, 0.8)'
+              : 'rgba(18, 18, 18, 0.6)'
+            : isAccordionExpanded
+              ? 'rgba(255, 255, 255, 0.8)'
+              : 'rgba(255, 255, 255, 0.6)',
+
+          backdropFilter: 'blur(8px)',
           borderRadius: '0 0 8px 8px !important',
         }}
         expanded={isAccordionExpanded}
@@ -215,9 +239,6 @@ export function TreeSettingsAccordion({ deleteTree }: TreeSettingsAccordionProps
           id='panel1a-header'
           expandIcon={<ExpandMoreIcon />}
           sx={{
-            '&.Mui-focused, &:hover': {
-              backgroundColor: 'transparent !important',
-            },
             height: 40,
             paddingY: isAccordionExpanded ? '60px' : '30px',
             paddingX: 2,
