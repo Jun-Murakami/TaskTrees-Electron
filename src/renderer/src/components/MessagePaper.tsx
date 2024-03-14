@@ -96,7 +96,6 @@ export const MessagePaper = () => {
           Privacy policy
         </a>
       </Typography>
-      <Typography variant='caption' sx={{ width: '100%' }}></Typography>
     </Box>
   );
 };
