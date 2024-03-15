@@ -125,7 +125,7 @@ export function HomePage() {
           </>
         ) : (
           // アカウント削除の確認ダイアログ
-          <>
+          <Box sx={{ textAlign: 'center' }}>
             <TaskTreesLogo />
             <Typography variant='body2' sx={{ marginY: 4 }}>
               アプリケーションのすべてのデータとアカウント情報が削除されます。
@@ -148,7 +148,7 @@ export function HomePage() {
             <Button onClick={() => setIsWaitingForDelete(false)} variant={'outlined'}>
               キャンセル
             </Button>
-          </>
+          </Box>
         )
       ) : (
         // ログイン前の画面
