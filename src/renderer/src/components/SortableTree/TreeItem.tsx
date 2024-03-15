@@ -53,7 +53,6 @@ export interface TreeItemContentProps extends TreeItemProps {
   setIsDragOver: (isDragOver: boolean) => void;
   isFocusedOrHovered: boolean;
   setIsFocusedOrHovered: (isFocusedOrHovered: boolean) => void;
-  isItemDescendantOfTrash?: boolean;
 }
 
 const TreeItemContent = memo(
@@ -212,11 +211,18 @@ const TreeItemContent = memo(
     // propsの一部のみを比較するなど、必要に応じて最適化
     return (
       prevProps.value === nextProps.value &&
+      prevProps.style === nextProps.style &&
       prevProps.done === nextProps.done &&
       prevProps.attachedFile === nextProps.attachedFile &&
       prevProps.childCount === nextProps.childCount &&
       prevProps.clone === nextProps.clone &&
       prevProps.collapsed === nextProps.collapsed &&
+      prevProps.currentTree === nextProps.currentTree &&
+      prevProps.darkMode === nextProps.darkMode &&
+      prevProps.inputRef === nextProps.inputRef &&
+      prevProps.isDragOver === nextProps.isDragOver &&
+      prevProps.isFocusedOrHovered === nextProps.isFocusedOrHovered &&
+      prevProps.onCollapse === nextProps.onCollapse &&
       prevProps.depth === nextProps.depth &&
       prevProps.disableInteraction === nextProps.disableInteraction &&
       prevProps.disableSelection === nextProps.disableSelection &&
