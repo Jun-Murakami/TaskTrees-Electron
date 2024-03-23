@@ -1,6 +1,4 @@
 import { useState, useRef } from 'react';
-import { useAppStateSync } from '../hooks/useAppStateSync';
-import { useTreeManagement } from '../hooks/useTreeManagement';
 import { useAuth } from '../hooks/useAuth';
 import { ModalDialog } from '../components/ModalDialog';
 import { InputDialog } from '../components/InputDialog';
@@ -34,29 +32,8 @@ export function HomePage() {
 
   // 認証状態の監視とログイン、ログアウトを行うカスタムフック
   const { handleSignup, handleLogin, handleLogout, handleDeleteAccount, handleResetPassword } = useAuth();
-
-  // ツリーの状態の読み込みと保存を行うカスタムフック
-  useAppStateSync();
-
-  //ツリーの状態を同期するカスタムフック
-  const {
-    deleteTree,
-    handleCreateNewTree,
-    handleListClick,
-    handleFileUpload,
-    handleLoadedContent,
-    handleDownloadTreeState,
-    handleDownloadAllTrees,
-  } = useTreeManagement();
-
   // メニューのイベントリスナーを登録するカスタムフック
-  useElectron({
-    handleCreateNewTree,
-    handleLoadedContent,
-    handleDownloadTreeState,
-    handleDownloadAllTrees,
-  });
-
+  useElectron();
   const theme = useTheme();
 
   const loginButtonRef = useRef<HTMLButtonElement>(null);
@@ -70,16 +47,10 @@ export function HomePage() {
           <>
             {isDialogVisible && <ModalDialog />}
             {isInputDialogVisible && <InputDialog />}
-            <ResponsiveDrawer
-              handleCreateNewTree={handleCreateNewTree}
-              handleListClick={handleListClick}
-              handleFileUpload={handleFileUpload}
-              handleDownloadAppState={handleDownloadTreeState}
-              handleDownloadAllTrees={handleDownloadAllTrees}
-              handleLogout={handleLogout}
-            />
+            <ResponsiveDrawer handleLogout={handleLogout} />
             <Box
               sx={{
+                flexGrow: 1,
                 maxWidth: '930px',
                 px: '15px',
                 pt: 0,
@@ -93,7 +64,7 @@ export function HomePage() {
             >
               {currentTree ? (
                 <>
-                  <TreeSettingsAccordion deleteTree={deleteTree} />
+                  <TreeSettingsAccordion />
                   <Box sx={{ maxWidth: '900px', width: '100%', marginX: 'auto', mb: 6 }}>
                     <SortableTree collapsible indicator removable />
                   </Box>

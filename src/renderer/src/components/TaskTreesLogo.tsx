@@ -4,13 +4,13 @@ import TaskTreesSVG from '../assets/TaskTrees.svg';
 export const TaskTreesLogo = () => {
   return (
     <Box sx={{ textAlign: 'center' }}>
-      <Typography sx={{ marginBottom: 0 }} variant='h3'>
+      <Typography sx={{ marginBottom: 0, justifyContent: 'center', alignItems: 'center', display: 'flex' }} variant='h3'>
         <img src={TaskTreesSVG} alt='Task Tree' style={{ width: '35px', height: '35px', marginRight: '10px' }} />
         TaskTrees
       </Typography>
       <Box sx={{ width: '100%', marginTop: -1, marginBottom: 4 }}>
         <Typography variant='caption' sx={{ width: '100%' }}>
-          Desktop
+          Team Edition
         </Typography>
       </Box>
     </Box>

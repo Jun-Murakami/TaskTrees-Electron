@@ -1,7 +1,8 @@
 import { createTheme } from '@mui/material/styles';
-import '@fontsource/m-plus-1p';
+import '@fontsource/biz-udpgothic';
 
 const fontFamilySet = [
+  '"BIZ UDPGothic"',
   '"M PLUS 1p"',
   '-apple-system',
   'BlinkMacSystemFont',
@@ -68,6 +69,12 @@ export const theme = createTheme({
   },
   typography: {
     fontFamily: fontFamilySet,
+    h3: {
+      fontSize: '35px',
+    },
+    caption: {
+      fontSize: '11px',
+    },
   },
   components: {
     MuiCssBaseline: {
@@ -94,6 +101,12 @@ export const darkTheme = createTheme({
   },
   typography: {
     fontFamily: fontFamilySet,
+    h3: {
+      fontSize: '35px',
+    },
+    caption: {
+      fontSize: '11px',
+    },
   },
   components: {
     MuiCssBaseline: {

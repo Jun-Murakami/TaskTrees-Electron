@@ -1,27 +1,17 @@
 import { useEffect } from 'react';
 import { useAppStateStore } from '../store/appStateStore';
 import { useTreeStateStore } from '../store/treeStateStore';
+import { useTreeManagement } from './useTreeManagement';
 import { useDatabase } from '../hooks/useDatabase';
 
-interface ElectronProps {
-  handleCreateNewTree: () => void;
-  handleLoadedContent: (data: string | null) => void;
-  handleDownloadTreeState: () => void;
-  handleDownloadAllTrees: (isSilent?: boolean) => Promise<string>;
-}
-
-export const useElectron = ({
-  handleCreateNewTree,
-  handleLoadedContent,
-  handleDownloadTreeState,
-  handleDownloadAllTrees,
-}: ElectronProps) => {
+export const useElectron = () => {
   const isLoggedIn = useAppStateStore((state) => state.isLoggedIn);
   const currentTree = useTreeStateStore((state) => state.currentTree);
 
   const items = useTreeStateStore((state) => state.items);
 
   const { saveItemsDb } = useDatabase();
+  const { handleCreateNewTree, handleLoadedContent, handleDownloadTreeState, handleDownloadAllTrees } = useTreeManagement();
 
   // 新規ツリー作成のイベントリスナーを登録
   useEffect(() => {
