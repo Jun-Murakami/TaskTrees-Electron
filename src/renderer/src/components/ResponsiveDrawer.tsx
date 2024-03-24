@@ -13,16 +13,21 @@ import {
   Divider,
   FormControlLabel,
   Switch,
+  Stack,
   Typography,
   TextField,
 } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
 import MenuIcon from '@mui/icons-material/Menu';
+import KeyboardArrowUpIcon from '@mui/icons-material/KeyboardArrowUp';
+import KeyboardArrowDownIcon from '@mui/icons-material/KeyboardArrowDown';
+import ClearIcon from '@mui/icons-material/Clear';
 import { UniqueIdentifier } from '@dnd-kit/core';
 import { useAppStateManagement } from '../hooks/useAppStateManagement';
 import { useAppStateStore } from '../store/appStateStore';
 import { useTreeStateStore } from '../store/treeStateStore';
 import { useTreeManagement } from '../hooks/useTreeManagement';
+import { useSearch } from '../hooks/useSearch';
 import { SortableList } from './SortableList/SortableList';
 import { MenuSettings } from './MenuSettings';
 
@@ -47,6 +52,7 @@ export function ResponsiveDrawer({ handleLogout }: { handleLogout: () => void })
 
   const { saveAppSettingsDb } = useAppStateManagement();
   const { loadCurrentTreeData, handleCreateNewTree } = useTreeManagement();
+  const { handlePrevButtonClick, handleNextButtonClick } = useSearch();
 
   useEffect(() => {
     if (drawerState) {
@@ -250,14 +256,29 @@ export function ResponsiveDrawer({ handleLogout }: { handleLogout: () => void })
       >
         <Divider />
         <List>
-          <ListItem disablePadding sx={{ px: 2 }}>
-            <TextField
-              label='ツリー内を検索'
-              value={searchKey}
-              size='small'
-              fullWidth
-              onChange={(event: React.ChangeEvent<HTMLInputElement>) => setSearchKey(event.target.value)}
-            />
+          <ListItem disablePadding sx={{ pl: 2, pr: 0 }}>
+            <Stack spacing={0} direction='row' sx={{ width: '100%' }}>
+              <TextField
+                label='ツリー内を検索'
+                value={searchKey}
+                size='small'
+                fullWidth
+                onChange={(event: React.ChangeEvent<HTMLInputElement>) => setSearchKey(event.target.value)}
+                InputProps={{
+                  endAdornment: searchKey ? (
+                    <IconButton size='small' onClick={() => setSearchKey('')} sx={{ mr: -1, color: theme.palette.action.active }}>
+                      <ClearIcon />
+                    </IconButton>
+                  ) : undefined,
+                }}
+              />
+              <IconButton size='small' sx={{ width: 22, ml: 0.5 }} disabled={searchKey === ''} onClick={handlePrevButtonClick}>
+                <KeyboardArrowUpIcon />
+              </IconButton>
+              <IconButton size='small' sx={{ width: 22, mr: 1 }} disabled={searchKey === ''} onClick={handleNextButtonClick}>
+                <KeyboardArrowDownIcon />
+              </IconButton>
+            </Stack>
           </ListItem>
         </List>
         <Divider />
