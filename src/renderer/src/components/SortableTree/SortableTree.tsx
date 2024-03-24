@@ -85,6 +85,7 @@ export function SortableTree({ collapsible, indicator = false, indentationWidth 
   const items = useTreeStateStore((state) => state.items);
   const setItems = useTreeStateStore((state) => state.setItems);
   const currentTree = useTreeStateStore((state) => state.currentTree);
+  const searchKey = useAppStateStore((state) => state.searchKey);
   const isLoading = useAppStateStore((state) => state.isLoading);
   const hideDoneItems = useAppStateStore((state) => state.hideDoneItems);
 
@@ -134,13 +135,17 @@ export function SortableTree({ collapsible, indicator = false, indentationWidth 
 
   const flattenedItems = useMemo(() => {
     const flattenedTree = flattenTree(items);
-    const collapsedItems = flattenedTree.reduce<string[]>(
+    let collapsedItems = flattenedTree.reduce<string[]>(
       (acc, { children, collapsed, id }) => (collapsed && children.length ? [...acc, id.toString()] : acc),
       []
     );
-
+    // searchKeyが空でない場合、collapsedItemsを空の配列にする
+    if (searchKey !== '') {
+      collapsedItems = [];
+    }
     return removeChildrenOf(flattenedTree, activeId ? [activeId.toString(), ...collapsedItems] : collapsedItems);
-  }, [activeId, items]);
+  }, [activeId, items, searchKey]);
+
   const projected = activeId && overId ? getProjection(flattenedItems, activeId, overId, offsetLeft, indentationWidth) : null;
   const sensorContext: SensorContext = useRef({
     items: flattenedItems,
@@ -198,6 +203,7 @@ export function SortableTree({ collapsible, indicator = false, indentationWidth 
       <SortableContext items={sortedIds} strategy={verticalListSortingStrategy}>
         {flattenedItems
           .filter(({ done }) => (hideDoneItems ? !done : true))
+          .filter(({ value }) => value.toLowerCase().includes(searchKey.toLowerCase()))
           .map(({ id, value, done, attachedFile, children, collapsed, depth }) => (
             <SortableTreeItem
               key={id}

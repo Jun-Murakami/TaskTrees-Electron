@@ -1,8 +1,10 @@
 import { useEffect, useState } from 'react';
 import { Typography, Stack, Button, Box, Popper, Fade } from '@mui/material';
+import { useTheme } from '@mui/material/styles';
 import MicrosoftIcon from '@mui/icons-material/Microsoft';
 import AppleIcon from '@mui/icons-material/Apple';
 import ReplyIcon from '@mui/icons-material/Reply';
+import { TaskTreeLogoIcon } from './TaskTreesLogo';
 
 export function Download() {
   const [open, setOpen] = useState(false);
@@ -13,6 +15,8 @@ export function Download() {
     setAnchorEl(event.currentTarget);
     setOpen((previousOpen) => !previousOpen);
   };
+
+  const theme = useTheme();
 
   const canBeOpen = open && Boolean(anchorEl);
   const id = canBeOpen ? 'transition-popper' : undefined;
@@ -25,12 +29,8 @@ export function Download() {
 
   return (
     <Box sx={{ textAlign: 'center' }}>
-      <Typography variant='h3' sx={{ margin: 10 }}>
-        <img
-          src='/TaskTrees.svg'
-          alt='Task Tree'
-          style={{ width: '35px', height: '35px', marginTop: '30px', marginRight: '10px' }}
-        />
+      <Typography sx={{ m: 10, justifyContent: 'center', alignItems: 'center', display: 'flex' }} variant='h3'>
+        <TaskTreeLogoIcon sx={{ width: '35px', height: '35px', marginRight: '10px', color: theme.palette.primary.main }} />
         TaskTrees
       </Typography>
       <Typography variant='h5' sx={{ mt: 1, mb: 0 }}>
