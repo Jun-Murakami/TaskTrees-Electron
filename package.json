@@ -1,6 +1,6 @@
 {
   "name": "tasktrees-electron",
-  "version": "1.0.14",
+  "version": "1.0.15",
   "description": "Tree-type task management and memo application",
   "main": "./out/main/index.js",
   "author": "JunMurakami",
