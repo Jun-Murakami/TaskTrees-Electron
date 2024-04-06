@@ -165,7 +165,7 @@ export function HomePage() {
               <Button onClick={() => handleResetPassword(email)} variant={'outlined'} size='small'>
                 パスワードをリセット
               </Button>
-              <Typography variant='caption' sx={{ marginY: 4 }}>
+              <Typography variant='caption' sx={{ marginY: 1 }}>
                 <a href='https://tasktree-s.web.app' target='_blank'>
                   Web版
                 </a>
