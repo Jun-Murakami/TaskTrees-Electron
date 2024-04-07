@@ -1,7 +1,7 @@
 import { forwardRef, HTMLAttributes, useState, useEffect, useRef, useCallback, memo } from 'react';
 import type { UniqueIdentifier } from '@dnd-kit/core';
 import { useTheme } from '@mui/material/styles';
-import { ListItem, Stack, Badge, TextField, Checkbox, Button, Typography, IconButton } from '@mui/material';
+import { useMediaQuery, ListItem, Stack, Badge, TextField, Checkbox, Button, Typography, IconButton } from '@mui/material';
 import KeyboardArrowDownIcon from '@mui/icons-material/KeyboardArrowDown';
 import DragHandleIcon from '@mui/icons-material/DragHandle';
 import DeleteIcon from '@mui/icons-material/Delete';
@@ -83,6 +83,7 @@ const TreeItemContent = memo(
     removeTrashDescendantsWithDone,
     isItemDescendantOfTrash,
   }: TreeItemContentProps) => {
+    const setIsEditingText = useAppStateStore((state) => state.setIsEditingText);
     const theme = useTheme();
 
     // ボタンの共通スタイルを定義
@@ -157,8 +158,12 @@ const TreeItemContent = memo(
                   fontSize: '0.9rem',
                 },
               }}
-              onFocus={() => setIsFocusedOrHovered(true)}
+              onFocus={() => {
+                setIsEditingText(true);
+                setIsFocusedOrHovered(true);
+              }}
               onBlur={() => {
+                setIsEditingText(false);
                 setTimeout(() => setIsFocusedOrHovered(false), 300);
               }}
             />
@@ -279,6 +284,7 @@ export const TreeItem = forwardRef<HTMLDivElement, TreeItemProps>(
     ref
   ) => {
     const theme = useTheme();
+    const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
     const currentTree = useTreeStateStore((state) => state.currentTree);
     const [isDragOver, setIsDragOver] = useState(false);
     const [isFocusedOrHovered, setIsFocusedOrHovered] = useState(false);
@@ -320,13 +326,14 @@ export const TreeItem = forwardRef<HTMLDivElement, TreeItemProps>(
       setIsDragOver(false);
     }, []);
 
+    // ドロップ後にテキストフィールドにフォーカスを当てる
     useEffect(() => {
-      if (addedTaskId === id && inputRef.current) {
+      if (addedTaskId === id && inputRef.current && !isMobile) {
         const timer = setTimeout(() => inputRef.current?.focus(), 500);
         return () => clearTimeout(timer);
       }
       return () => {};
-    }, [addedTaskId, id]);
+    }, [addedTaskId, id, isMobile]);
 
     useEffect(() => {
       const timer = setTimeout(() => setIsFocusedOrHovered(false), 300);
