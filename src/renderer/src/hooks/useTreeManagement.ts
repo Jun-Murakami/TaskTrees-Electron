@@ -208,6 +208,8 @@ export const useTreeManagement = () => {
     setCurrentTree(null);
     setCurrentTreeName(null);
     setCurrentTreeMembers(null);
+    setPrevCurrentTree(null);
+    setPrevItems([]);
     setItems([]);
     setIsAccordionExpanded(false);
 
