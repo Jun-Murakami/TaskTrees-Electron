@@ -83,16 +83,16 @@ export const MessagePaper = () => {
           </>
         )}
       </Paper>
-      <Typography variant='caption' sx={{ width: '100%', minWidth: '100%', textAlign: 'center' }}>
-        <a href='mailto:app@bucketrelay.com' target='_blank' rel='noreferrer'>
+      <Typography variant='caption' sx={{ width: '100%', minWidth: '100%', mt: 1, textAlign: 'center' }}>
+        <a href='https://jun-murakami.web.app/' target='_blank' rel='noreferrer'>
           ©{new Date().getFullYear()} Jun Murakami
         </a>{' '}
         |{' '}
-        <a href='https://github.com/Jun-Murakami/TaskTrees-Electron' target='_blank' rel='noreferrer'>
+        <a href='https://github.com/Jun-Murakami/TaskTrees' target='_blank' rel='noreferrer'>
           GitHub
         </a>{' '}
         |{' '}
-        <a href='https://tasktree-s.web.app/privacy-policy' target='_blank' rel='noreferrer'>
+        <a href='https://jun-murakami.web.app/privacy-policy-tasktrees' target='_blank' rel='noreferrer'>
           Privacy policy
         </a>
       </Typography>
