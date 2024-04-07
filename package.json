@@ -39,7 +39,7 @@
     "@mui/material": "^5.15.12",
     "electron-context-menu": "^3.6.1",
     "electron-updater": "^6.1.7",
-    "firebase": "^10.8.1",
+    "firebase": "^10.6.0",
     "i": "^0.3.7",
     "immer": "^10.0.3",
     "lodash": "^4.17.21",
