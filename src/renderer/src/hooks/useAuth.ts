@@ -30,6 +30,10 @@ const auth = getAuth(app);
 const db = getDatabase(app);
 
 export const useAuth = () => {
+  const uid = useAppStateStore((state) => state.uid);
+  const setUid = useAppStateStore((state) => state.setUid);
+  const email = useAppStateStore((state) => state.email);
+  const setEmail = useAppStateStore((state) => state.setEmail);
   const isLoading = useAppStateStore((state) => state.isLoading);
   const setIsLoading = useAppStateStore((state) => state.setIsLoading);
   const setIsLoggedIn = useAppStateStore((state) => state.setIsLoggedIn);
@@ -50,6 +54,8 @@ export const useAuth = () => {
     setIsLoading(true);
     const unsubscribe = auth.onAuthStateChanged((user) => {
       setIsLoggedIn(!!user);
+      setUid(user?.uid || null);
+      setEmail(user?.email || null);
       setIsLoading(false);
       if (user) {
         // タイムスタンプの監視を開始して初期設定をロード
@@ -59,66 +65,96 @@ export const useAuth = () => {
 
     return () => unsubscribe();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [setIsLoading, setIsLoggedIn, setUid, setEmail]);
+
+  useEffect(() => {
+    if (uid && email) {
+      setIsLoading(true);
+      const asyncFunc = async () => {
+        const setTimeoutPromise = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
+        await setTimeoutPromise(1000);
+        await observeTimeStamp();
+      };
+      asyncFunc();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [uid, email]);
 
   // メールアドレスとパスワードでのログイン
-  const handleLogin = (email: string, password: string) => {
+  const handleEmailLogin = async (email: string, password: string) => {
     if (email === '' || password === '') {
       setSystemMessage('メールアドレスとパスワードを入力してください。');
       return;
     }
-    signInWithEmailAndPassword(auth, email, password)
+    setSystemMessage('ログイン中...');
+    await signInWithEmailAndPassword(auth, email, password)
+      .then(() => {
+        setIsLoggedIn(true);
+        setSystemMessage(null);
+      })
+      .catch((error) => {
+        if (error.code === 'auth/invalid-credential') {
+          setSystemMessage(
+            'ログインに失敗しました。メールアドレスとパスワードを確認してください。Googleログインで使用したメールアドレスでログインする場合は、パスワードのリセットを行ってください。'
+          );
+        } else if (error.code === 'auth/invalid-login-credentials') {
+          setSystemMessage(
+            'ログインに失敗しました。メールアドレスとパスワードを確認してください。Googleログインで使用したメールアドレスでログインする場合は、パスワードのリセットを行ってください。'
+          );
+        } else {
+          setSystemMessage('ログインに失敗しました。\n\n' + error.code);
+        }
+      });
+  };
+
+  // メールアドレスとパスワードでサインアップ
+  const handleSignup = async (email: string, password: string) => {
+    if (email === '' || password === '') {
+      setSystemMessage('メールアドレスとパスワードを入力してください。');
+      return;
+    }
+    createUserWithEmailAndPassword(await auth, email, password)
       .then(() => {
         setIsLoggedIn(true);
         setSystemMessage(null);
       })
       .catch((error) => {
         console.error(error);
-        setSystemMessage('ログインに失敗しました。' + error.message);
-      });
-  };
-
-  // メールアドレスとパスワードでサインアップ
-  const handleSignup = (email: string, password: string) => {
-    if (email === '' || password === '') {
-      setSystemMessage('メールアドレスとパスワードを入力してください。');
-      return;
-    }
-    createUserWithEmailAndPassword(auth, email, password)
-      .then(() => {
-        setSystemMessage('メールアドレスの確認メールを送信しました。メールボックスを確認してください。');
-      })
-      .catch((error) => {
-        console.error(error);
         if (error.code === 'auth/email-already-in-use') {
           setSystemMessage('このメールアドレスは既に使用されています。');
+        } else if (error.code === 'auth/weak-password') {
+          setSystemMessage('パスワードが弱すぎます。6文字以上のパスワードを設定してください。');
         } else {
-          setSystemMessage('サインアップに失敗しました。');
+          setSystemMessage('サインアップに失敗しました。\n\n' + error.code);
         }
       });
   };
 
   // パスワードをリセット
-  const handleResetPassword = (email: string) => {
-    if (email === '') {
-      setSystemMessage('メールアドレスを入力してください。');
+  const handleResetPassword = async (receivedEmail: string = '') => {
+    if (receivedEmail === '') {
       return;
     }
-    sendPasswordResetEmail(auth, email)
+    sendPasswordResetEmail(auth, receivedEmail)
       .then(() => {
         setSystemMessage('パスワードリセットメールを送信しました。メールボックスを確認してください。');
       })
       .catch((error) => {
-        console.error(error);
-        setSystemMessage('パスワードリセットに失敗しました。管理者に連絡してください。');
+        if (error.code === 'auth/invalid-email') {
+          setSystemMessage('パスワードのリセットに失敗しました。メールアドレスを確認してください。');
+        } else {
+          setSystemMessage('パスワードのリセットに失敗しました。\n\n' + error.code);
+        }
       });
   };
 
   // ログアウト
-  const handleLogout = () => {
+  const handleLogout = async () => {
     signOut(auth)
       .then(() => {
         setIsLoggedIn(false);
+        setUid(null);
+        setEmail(null);
         setItems([]);
         setTreesList([]);
         setCurrentTree(null);
@@ -201,7 +237,7 @@ export const useAuth = () => {
           });
       }
       // ユーザーのappStateを削除
-      const appStateRef = await ref(db, `users/${user.uid}`);
+      const appStateRef = ref(db, `users/${user.uid}`);
       await remove(appStateRef)
         .then(() => {
           console.log('データが正常に削除されました。');
@@ -236,5 +272,5 @@ export const useAuth = () => {
     }
     setIsWaitingForDelete(false);
   };
-  return { handleSignup, handleLogin, handleResetPassword, handleLogout, handleDeleteAccount };
+  return { handleEmailLogin, handleSignup, handleResetPassword, handleLogout, handleDeleteAccount };
 };
