@@ -21,10 +21,14 @@ export const MessagePaper = () => {
     // 最新バージョン情報を取得
     const fetchLatestVersion = async () => {
       try {
-        const response = await fetch('https://tasktree-s.web.app/version.json');
+        const repoUrl = 'https://api.github.com/repos/Jun-Murakami/TaskTrees-Electron/releases/latest';
+        const response = await fetch(repoUrl);
         const data = await response.json();
-        setLatestVersion(data.version);
-        setUpdateMessage(data.message);
+        if (!data) {
+          console.error('データが見つかりません');
+        }
+        setLatestVersion(data.tag_name.replace('v', ''));
+        setUpdateMessage(data.body);
       } catch (error) {
         setLatestVersion('※バージョン情報の取得に失敗しました。' + error);
       }
@@ -65,7 +69,7 @@ export const MessagePaper = () => {
             <Typography variant='body2' sx={{ textAlign: 'left', p: 2 }} gutterBottom>
               {`最新バージョン: ${latestVersion} が利用可能です。`}
               <br />
-              <a href='https://tasktree-s.web.app/download' target='_blank' rel='noreferrer'>
+              <a href='https://jun-murakami.web.app/#tasktrees' target='_blank' rel='noreferrer'>
                 ダウンロード
               </a>
               <br />
