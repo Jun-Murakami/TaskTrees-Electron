@@ -101,6 +101,13 @@ export const theme = createTheme({
         body: navigator.userAgent?.indexOf('Win') > 0 || navigator.platform.startsWith('Win') ? windowsScrollbarStyles : {},
       },
     },
+    MuiTextField: {
+      defaultProps: {
+        inputProps: {
+          spellCheck: 'false',
+        },
+      },
+    },
   },
 });
 
@@ -123,6 +130,13 @@ export const darkTheme = createTheme({
       styleOverrides: {
         // ユーザーエージェントにWinを含むか、プラットフォームがWinから始まる場合にスクロールバーのスタイルを適用
         body: navigator.userAgent?.indexOf('Win') > 0 || navigator.platform.startsWith('Win') ? windowsScrollbarStylesDark : {},
+      },
+    },
+    MuiTextField: {
+      defaultProps: {
+        inputProps: {
+          spellCheck: 'false',
+        },
       },
     },
   },
