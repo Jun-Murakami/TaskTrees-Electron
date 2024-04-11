@@ -10,7 +10,6 @@ import { Button, CircularProgress, Typography, TextField, Box, Stack, Divider } 
 import { useTheme } from '@mui/material/styles';
 import DeleteForeverIcon from '@mui/icons-material/DeleteForever';
 import GoogleIcon from '@mui/icons-material/Google';
-import AppleIcon from '@mui/icons-material/Apple';
 import { TreeSettingsAccordion } from './TreeSettingsAccordion';
 import { SortableTree } from './SortableTree/SortableTree';
 import { useDialogStore } from '../store/dialogStore';
