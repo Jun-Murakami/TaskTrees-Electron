@@ -1,7 +1,17 @@
 import { useEffect } from 'react';
 import { getApp, initializeApp } from 'firebase/app';
 import {
-  getAuth, indexedDBLocalPersistence, initializeAuth, GoogleAuthProvider, OAuthProvider, signInWithPopup, signInWithCredential, signInWithEmailAndPassword, createUserWithEmailAndPassword, sendPasswordResetEmail, signOut
+  getAuth,
+  indexedDBLocalPersistence,
+  initializeAuth,
+  GoogleAuthProvider,
+  OAuthProvider,
+  signInWithPopup,
+  signInWithCredential,
+  signInWithEmailAndPassword,
+  createUserWithEmailAndPassword,
+  sendPasswordResetEmail,
+  signOut,
 } from 'firebase/auth';
 import { getDatabase, remove, ref, get, set } from 'firebase/database';
 import { getStorage, ref as storageRef, deleteObject, listAll } from 'firebase/storage';
@@ -41,6 +51,7 @@ const auth = getFirebaseAuth();
 export const useAuth = () => {
   const isOffline = useAppStateStore((state) => state.isOffline);
   const setIsOffline = useAppStateStore((state) => state.setIsOffline);
+  const googleToken = useAppStateStore((state) => state.googleToken);
   const uid = useAppStateStore((state) => state.uid);
   const setUid = useAppStateStore((state) => state.setUid);
   const email = useAppStateStore((state) => state.email);
@@ -87,7 +98,7 @@ export const useAuth = () => {
       return () => {
         unsubscribe();
         FirebaseAuthentication.removeAllListeners();
-      }
+      };
     };
     asyncFunc();
     setTimeout(() => {
@@ -128,15 +139,18 @@ export const useAuth = () => {
       const result = await FirebaseAuthentication.signInWithGoogle();
       // 2. Sign in on the web layer using the id token
       const credential = GoogleAuthProvider.credential(result.credential?.idToken);
-      await signInWithCredential(await auth, credential).then(async () => {
-        setIsLoading(true);
-        setIsLoggedIn(true);
-        setSystemMessage(null);
-      }).catch((error) => {
-        setSystemMessage('Googleログインに失敗しました。\n\n' + error.code);
-      }).finally(() => {
-        setIsLoading(false);
-      });
+      await signInWithCredential(await auth, credential)
+        .then(async () => {
+          setIsLoading(true);
+          setIsLoggedIn(true);
+          setSystemMessage(null);
+        })
+        .catch((error) => {
+          setSystemMessage('Googleログインに失敗しました。:1\n\n' + error.code);
+        })
+        .finally(() => {
+          setIsLoading(false);
+        });
     } else {
       const provider = new GoogleAuthProvider();
       signInWithPopup(getAuth(), provider)
@@ -145,12 +159,37 @@ export const useAuth = () => {
           setSystemMessage(null);
         })
         .catch((error) => {
-          setSystemMessage('Googleログインに失敗しました。\n\n' + error.code);
-        }).finally(() => {
+          setSystemMessage('Googleログインに失敗しました。:2\n\n' + error.code);
+        })
+        .finally(() => {
           setIsLoading(false);
         });
     }
   };
+
+  //Googleログインのトークン受信
+  useEffect(() => {
+    const asyncFunc = async () => {
+      if (googleToken) {
+        console.log('googleToken:', googleToken);
+        const credential = GoogleAuthProvider.credential(googleToken);
+        console.log('credential:', credential);
+        await signInWithCredential(getAuth(), credential)
+          .then(async () => {
+            setIsLoading(true);
+            setIsLoggedIn(true);
+            setSystemMessage(null);
+          })
+          .catch((error) => {
+            setSystemMessage('Googleログインに失敗しました。\n\n' + error.code);
+          })
+          .finally(() => {
+            setIsLoading(false);
+          });
+      }
+    };
+    asyncFunc();
+  }, [googleToken]);
 
   //Appleログイン
   const handleAppleLogin = async () => {
@@ -167,15 +206,18 @@ export const useAuth = () => {
         return;
       }
       const credential = provider.credential({ idToken: result.credential.idToken, rawNonce: result.credential.nonce });
-      await signInWithCredential(await auth, credential).then(async () => {
-        setIsLoading(true);
-        setIsLoggedIn(true);
-        setSystemMessage(null);
-      }).catch((error) => {
-        setSystemMessage('Appleログインに失敗しました。\n\n' + error.code);
-      }).finally(() => {
-        setIsLoading(false);
-      });
+      await signInWithCredential(await auth, credential)
+        .then(async () => {
+          setIsLoading(true);
+          setIsLoggedIn(true);
+          setSystemMessage(null);
+        })
+        .catch((error) => {
+          setSystemMessage('Appleログインに失敗しました。\n\n' + error.code);
+        })
+        .finally(() => {
+          setIsLoading(false);
+        });
     } else {
       const provider = new OAuthProvider('apple.com');
       signInWithPopup(getAuth(), provider)
@@ -185,7 +227,8 @@ export const useAuth = () => {
         })
         .catch((error) => {
           setSystemMessage('Appleログインに失敗しました。\n\n' + error.code);
-        }).finally(() => {
+        })
+        .finally(() => {
           setIsLoading(false);
         });
     }
@@ -198,19 +241,25 @@ export const useAuth = () => {
       return;
     }
     setSystemMessage('ログイン中...');
-    signInWithEmailAndPassword(await auth, email, password).then(() => {
-      setIsLoading(true);
-      setIsLoggedIn(true);
-      setSystemMessage(null);
-    }).catch((error) => {
-      if (error.code === 'auth/invalid-credential') {
-        setSystemMessage('ログインに失敗しました。メールアドレスとパスワードを確認してください。Googleログインで使用したメールアドレスでログインする場合は、パスワードのリセットを行ってください。');
-      } else if (error.code === 'auth/invalid-login-credentials') {
-        setSystemMessage('ログインに失敗しました。メールアドレスとパスワードを確認してください。Googleログインで使用したメールアドレスでログインする場合は、パスワードのリセットを行ってください。');
-      } else {
-        setSystemMessage('ログインに失敗しました。\n\n' + error.code);
-      }
-    });
+    signInWithEmailAndPassword(await auth, email, password)
+      .then(() => {
+        setIsLoading(true);
+        setIsLoggedIn(true);
+        setSystemMessage(null);
+      })
+      .catch((error) => {
+        if (error.code === 'auth/invalid-credential') {
+          setSystemMessage(
+            'ログインに失敗しました。メールアドレスとパスワードを確認してください。Googleログインで使用したメールアドレスでログインする場合は、パスワードのリセットを行ってください。'
+          );
+        } else if (error.code === 'auth/invalid-login-credentials') {
+          setSystemMessage(
+            'ログインに失敗しました。メールアドレスとパスワードを確認してください。Googleログインで使用したメールアドレスでログインする場合は、パスワードのリセットを行ってください。'
+          );
+        } else {
+          setSystemMessage('ログインに失敗しました。\n\n' + error.code);
+        }
+      });
   };
 
   // メールアドレスとパスワードでサインアップ
@@ -415,5 +464,13 @@ export const useAuth = () => {
     }
     setIsWaitingForDelete(false);
   };
-  return { handleGoogleLogin, handleAppleLogin, handleEmailLogin, handleSignup, handleResetPassword, handleLogout, handleDeleteAccount };
+  return {
+    handleGoogleLogin,
+    handleAppleLogin,
+    handleEmailLogin,
+    handleSignup,
+    handleResetPassword,
+    handleLogout,
+    handleDeleteAccount,
+  };
 };

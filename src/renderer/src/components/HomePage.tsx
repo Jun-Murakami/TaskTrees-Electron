@@ -1,5 +1,6 @@
 import { useState, useRef } from 'react';
 import { useAuth } from '../hooks/useAuth';
+import { useTreeManagement } from '../hooks/useTreeManagement';
 import { ModalDialog } from '../components/ModalDialog';
 import { InputDialog } from '../components/InputDialog';
 import { ResponsiveDrawer } from './ResponsiveDrawer';
@@ -8,6 +9,8 @@ import { TaskTreesLogo } from './TaskTreesLogo';
 import { Button, CircularProgress, Typography, TextField, Box, Stack, Divider } from '@mui/material';
 import { useTheme } from '@mui/material/styles';
 import DeleteForeverIcon from '@mui/icons-material/DeleteForever';
+import GoogleIcon from '@mui/icons-material/Google';
+import AppleIcon from '@mui/icons-material/Apple';
 import { TreeSettingsAccordion } from './TreeSettingsAccordion';
 import { SortableTree } from './SortableTree/SortableTree';
 import { useDialogStore } from '../store/dialogStore';
@@ -15,12 +18,15 @@ import { useInputDialogStore } from '../store/dialogStore';
 import { useAppStateStore } from '../store/appStateStore';
 import { useTreeStateStore } from '../store/treeStateStore';
 import { useElectron } from '@renderer/hooks/useElectron';
+//import { Capacitor } from '@capacitor/core';
 
 export function HomePage() {
   const [email, setEmail] = useState(''); // ログイン用メールアドレス
   const [password, setPassword] = useState(''); // ログイン用パスワード
+  const setIsOffline = useAppStateStore((state) => state.setIsOffline); //
   const isLoading = useAppStateStore((state) => state.isLoading); // ローディング中の状態
   const isLoggedIn = useAppStateStore((state) => state.isLoggedIn); // ログイン状態
+  const setIsLoggedIn = useAppStateStore((state) => state.setIsLoggedIn); // ログイン状態を変更
   const systemMessage = useAppStateStore((state) => state.systemMessage); // システムメッセージ
   const isWaitingForDelete = useAppStateStore((state) => state.isWaitingForDelete); // アカウント削除の確認状態
   const setIsWaitingForDelete = useAppStateStore((state) => state.setIsWaitingForDelete); // アカウント削除の確認状態を変更
@@ -30,9 +36,21 @@ export function HomePage() {
   const isInputDialogVisible = useInputDialogStore((state: { isDialogVisible: boolean }) => state.isDialogVisible);
 
   // 認証状態の監視とログイン、ログアウトを行うカスタムフック
-  const { handleEmailLogin, handleSignup, handleResetPassword, handleLogout, handleDeleteAccount } = useAuth();
+  const {
+    handleGoogleLogin,
+    handleAppleLogin,
+    handleEmailLogin,
+    handleSignup,
+    handleResetPassword,
+    handleLogout,
+    handleDeleteAccount,
+  } = useAuth();
+
+  const { handleCreateOfflineTree } = useTreeManagement();
+
   // メニューのイベントリスナーを登録するカスタムフック
   useElectron();
+
   const theme = useTheme();
   const loginButtonRef = useRef<HTMLButtonElement>(null);
   const drawerWidth = 300;
@@ -141,6 +159,9 @@ export function HomePage() {
                       loginButtonRef.current?.click();
                     }
                   }}
+                  InputLabelProps={{
+                    shrink: true,
+                  }}
                 />
                 <TextField
                   label='パスワード'
@@ -155,6 +176,9 @@ export function HomePage() {
                     if (e.key === 'Enter') {
                       loginButtonRef.current?.click();
                     }
+                  }}
+                  InputLabelProps={{
+                    shrink: true,
                   }}
                 />
                 <Box sx={{ mt: 4, width: '100%', display: 'flex', justifyContent: 'space-between' }}>
@@ -179,22 +203,33 @@ export function HomePage() {
                     新規ユーザー登録
                   </Button>
                 </Box>
-                <Divider />
-                <Button onClick={async () => await handleResetPassword(email)} variant='outlined' size='small'>
-                  <Typography variant='caption'>パスワードをリセット</Typography>
+                <Divider>
+                  <Typography variant='caption'>または</Typography>
+                </Divider>
+                <Button
+                  onClick={() => window.electron.openGoogleAuthURL()}
+                  variant='contained'
+                  startIcon={<GoogleIcon />}
+                  sx={{ textTransform: 'none' }}
+                >
+                  Googleでログイン
                 </Button>
-                <Typography variant='caption' sx={{ marginY: 1 }}>
-                  デスクトップ版ではGoogleアカウントでのログインはできません。
-                  <br />
-                  <a href='https://tasktree-s.web.app' target='_blank'>
-                    Web版
-                  </a>
-                  をGoogleログインでご利用の方は、
-                  <br />
-                  最初にメールアドレスを入力してパスワードをリセットしてください。
-                  <br />
-                  ※ツリーデータはデスクトップ版とWebアプリ版で共有されます。
-                </Typography>
+                <Button
+                  onClick={() => {
+                    setIsOffline(true);
+                    setIsLoggedIn(true);
+                    handleCreateOfflineTree();
+                  }}
+                  variant='contained'
+                  sx={{ textTransform: 'none' }}
+                >
+                  オフラインモードで使用する
+                </Button>
+                <Button onClick={async () => await handleResetPassword()} variant='text' size='small'>
+                  <Typography variant='caption' sx={{ textDecoration: 'underline' }}>
+                    ※ パスワードをお忘れですか？
+                  </Typography>
+                </Button>
               </Stack>
             </>
           )}

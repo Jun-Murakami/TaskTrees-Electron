@@ -33,6 +33,12 @@ if (process.contextIsolated) {
       onBeforeClose: (callback) => ipcRenderer.on('before-close', callback),
       removeBeforeCloseListener: () => ipcRenderer.removeAllListeners('before-close'),
       sendCloseCompleted: (data) => ipcRenderer.send('close-completed', data),
+      openGoogleAuthURL: () => ipcRenderer.send('open-google-auth-url'),
+      onGoogleAuthToken: (callback: (token: string) => void) => ipcRenderer.on('google-auth-token', (_, data) => callback(data)),
+      removeGoogleAuthTokenListener: () => ipcRenderer.removeAllListeners('google-auth-token'),
+      openAppleAuthURL: () => ipcRenderer.send('open-apple-auth-url'),
+      onAppleAuthToken: (callback: (token: string) => void) => ipcRenderer.on('apple-auth-token', (_, data) => callback(data)),
+      removeAppleAuthTokenListener: () => ipcRenderer.removeAllListeners('apple-auth-token'),
     });
     contextBridge.exposeInMainWorld('api', api);
   } catch (error) {

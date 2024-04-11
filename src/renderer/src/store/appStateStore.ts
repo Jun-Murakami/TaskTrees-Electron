@@ -2,6 +2,7 @@ import { create } from 'zustand';
 
 type AppState = {
   isOffline: boolean;
+  googleToken: string | null;
   localTimestamp: number;
   darkMode: boolean;
   hideDoneItems: boolean;
@@ -17,6 +18,7 @@ type AppState = {
   searchKey: string;
   isEditingText: boolean;
   setIsOffline: (isOffline: boolean) => void;
+  setGoogleToken: (googleToken: string | null) => void;
   setLocalTimestamp: (localTimestamp: number) => void;
   setDarkMode: (darkMode: boolean) => void;
   setHideDoneItems: (hideDoneItems: boolean) => void;
@@ -35,6 +37,7 @@ type AppState = {
 
 export const useAppStateStore = create<AppState>((set) => ({
   isOffline: false,
+  googleToken: null,
   localTimestamp: 0,
   darkMode: false,
   hideDoneItems: false,
@@ -50,6 +53,7 @@ export const useAppStateStore = create<AppState>((set) => ({
   searchKey: '',
   isEditingText: false,
   setIsOffline: (isOffline) => set({ isOffline }),
+  setGoogleToken: (googleToken) => set({ googleToken }),
   setLocalTimestamp: (localTimestamp) => set({ localTimestamp }),
   setDarkMode: (darkMode) => set({ darkMode }),
   setHideDoneItems: (hideDoneItems) => set({ hideDoneItems }),

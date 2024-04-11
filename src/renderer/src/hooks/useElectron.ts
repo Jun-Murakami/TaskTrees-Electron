@@ -5,6 +5,7 @@ import { useTreeManagement } from './useTreeManagement';
 import { useDatabase } from '../hooks/useDatabase';
 
 export const useElectron = () => {
+  const setGoogleToken = useAppStateStore((state) => state.setGoogleToken);
   const isLoggedIn = useAppStateStore((state) => state.isLoggedIn);
   const currentTree = useTreeStateStore((state) => state.currentTree);
 
@@ -12,6 +13,28 @@ export const useElectron = () => {
 
   const { saveItemsDb } = useDatabase();
   const { handleCreateNewTree, handleLoadedContent, handleDownloadTreeState, handleDownloadAllTrees } = useTreeManagement();
+
+  //Googleログインのトークン受信リスナーを登録
+  useEffect(() => {
+    window.electron.onGoogleAuthToken((token: string) => {
+      console.log('Google Auth Token:', token);
+      setGoogleToken(token);
+    });
+    return () => {
+      window.electron.removeGoogleAuthTokenListener();
+    };
+  }, []);
+
+  //Appleログインのトークン受信リスナーを登録
+  useEffect(() => {
+    window.electron.onAppleAuthToken((token: string) => {
+      console.log('Apple Auth Token:', token);
+      setGoogleToken(token);
+    });
+    return () => {
+      window.electron.removeAppleAuthTokenListener();
+    };
+  }, []);
 
   // 新規ツリー作成のイベントリスナーを登録
   useEffect(() => {
