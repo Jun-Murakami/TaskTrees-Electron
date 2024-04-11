@@ -22,9 +22,8 @@ interface ExtendedElectronAPI extends BaseElectronAPI {
   openGoogleAuthURL: () => void;
   onGoogleAuthToken: (callback: (token: string) => void) => void;
   removeGoogleAuthTokenListener: () => void;
-  openAppleAuthURL: () => void;
-  onAppleAuthToken: (callback: (token: string) => void) => void;
-  removeAppleAuthTokenListener: () => void;
+  startServer: () => void;
+  stopServer: () => void;
 }
 
 declare global {

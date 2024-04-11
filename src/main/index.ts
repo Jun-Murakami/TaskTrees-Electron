@@ -6,6 +6,7 @@ import { electronApp, optimizer, is } from '@electron-toolkit/utils';
 import contextMenu from 'electron-context-menu';
 import icon from '../../resources/icon.png?asset';
 import express from 'express';
+import { Server } from 'http';
 
 let mainWindow: BrowserWindow | null = null; // mainWindowをグローバル変数として宣言
 interface WindowState {
@@ -23,11 +24,31 @@ const expressApp = express();
 const PORT = 8080;
 // Expressサーバの設定
 expressApp.get('/', (_, res) => {
-  res.send('ElectronのExpressサーバが動作しています');
+  res.send('Server is running.');
 });
-expressApp.listen(PORT, () => {
-  console.log(`サーバがポート${PORT}で起動しました。`);
-});
+
+let server: Server | null = null; // サーバインスタンスを保持する変数
+
+// サーバを起動する関数
+function startServer() {
+  if (!server) {
+    // サーバが既に起動していない場合のみ起動
+    server = expressApp.listen(PORT, () => {
+      console.log(`Server is running at http://localhost:${PORT}`);
+    });
+  }
+}
+
+// サーバを停止する関数
+function stopServer() {
+  if (server) {
+    // サーバが起動している場合のみ停止
+    server.close(() => {
+      console.log('Server is stopped.');
+    });
+    server = null; // サーバインスタンスをクリア
+  }
+}
 
 const generateState = () => {
   return crypto.randomBytes(16).toString('hex');
@@ -280,9 +301,12 @@ if (!gotTheLock) {
       shell.openExternal(authUrl);
     });
 
-    //Apple認証のためのURLをシェルで開く
-    ipcMain.on('open-apple-auth-url', () => {
-      shell.openExternal(appleAuthUrl);
+    ipcMain.on('start-server', () => {
+      startServer();
+    });
+
+    ipcMain.on('stop-server', () => {
+      stopServer();
     });
 
     let isQuitting = false;

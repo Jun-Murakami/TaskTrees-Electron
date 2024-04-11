@@ -83,6 +83,7 @@ export const useAuth = () => {
           if (result.user) {
             setUid(result.user.uid);
             setEmail(result.user.email);
+            window.electron.stopServer();
           }
           setIsLoading(false);
         });
@@ -92,6 +93,7 @@ export const useAuth = () => {
         if (user) {
           setUid(user.uid);
           setEmail(user.email);
+          window.electron.stopServer();
         }
         setIsLoading(false);
       });
@@ -171,9 +173,7 @@ export const useAuth = () => {
   useEffect(() => {
     const asyncFunc = async () => {
       if (googleToken) {
-        console.log('googleToken:', googleToken);
         const credential = GoogleAuthProvider.credential(googleToken);
-        console.log('credential:', credential);
         await signInWithCredential(getAuth(), credential)
           .then(async () => {
             setIsLoading(true);
@@ -311,7 +311,6 @@ export const useAuth = () => {
       '',
       false
     );
-    console.log(result);
     if (result === '') {
       return;
     }

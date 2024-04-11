@@ -36,15 +36,7 @@ export function HomePage() {
   const isInputDialogVisible = useInputDialogStore((state: { isDialogVisible: boolean }) => state.isDialogVisible);
 
   // 認証状態の監視とログイン、ログアウトを行うカスタムフック
-  const {
-    handleGoogleLogin,
-    handleAppleLogin,
-    handleEmailLogin,
-    handleSignup,
-    handleResetPassword,
-    handleLogout,
-    handleDeleteAccount,
-  } = useAuth();
+  const { handleEmailLogin, handleSignup, handleResetPassword, handleLogout, handleDeleteAccount } = useAuth();
 
   const { handleCreateOfflineTree } = useTreeManagement();
 
@@ -207,7 +199,12 @@ export function HomePage() {
                   <Typography variant='caption'>または</Typography>
                 </Divider>
                 <Button
-                  onClick={() => window.electron.openGoogleAuthURL()}
+                  onClick={() => {
+                    window.electron.startServer();
+                    setTimeout(() => {
+                      window.electron.openGoogleAuthURL();
+                    }, 1000);
+                  }}
                   variant='contained'
                   startIcon={<GoogleIcon />}
                   sx={{ textTransform: 'none' }}

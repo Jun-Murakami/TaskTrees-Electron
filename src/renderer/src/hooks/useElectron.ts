@@ -17,22 +17,10 @@ export const useElectron = () => {
   //Googleログインのトークン受信リスナーを登録
   useEffect(() => {
     window.electron.onGoogleAuthToken((token: string) => {
-      console.log('Google Auth Token:', token);
       setGoogleToken(token);
     });
     return () => {
       window.electron.removeGoogleAuthTokenListener();
-    };
-  }, []);
-
-  //Appleログインのトークン受信リスナーを登録
-  useEffect(() => {
-    window.electron.onAppleAuthToken((token: string) => {
-      console.log('Apple Auth Token:', token);
-      setGoogleToken(token);
-    });
-    return () => {
-      window.electron.removeAppleAuthTokenListener();
     };
   }, []);
 
