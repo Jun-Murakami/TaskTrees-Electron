@@ -66,13 +66,17 @@ export const useTaskManagement = () => {
           };
           listUpAttachedFiles(itemToRemoveCopy);
           attachedFiles.forEach((attachedFile) => {
-            if (!currentTree) return;
+            if (!currentTree) {
+              setIsLoading(false);
+              return;
+            };
             deleteFile(attachedFile, currentTree);
           });
         } catch (error) {
           showDialog('添付ファイルの削除に失敗しました。\n\n' + error, 'Error');
         }
         setItems(removeItem(currentItems, id));
+        setIsLoading(false);
         return;
       } else if (parentItem) {
         parentItem.children = parentItem.children.filter((child) => child.id !== id);
@@ -209,7 +213,7 @@ export const useTaskManagement = () => {
   };
 
   // タスクのコピー ------------------------------
-  const handleCopy = (targetTreeId: UniqueIdentifier, targetTaskId: UniqueIdentifier) => {
+  const handleCopy = async (targetTreeId: UniqueIdentifier, targetTaskId: UniqueIdentifier) => {
     if (!targetTreeId || !targetTaskId) return false;
 
     try {
@@ -221,7 +225,7 @@ export const useTaskManagement = () => {
 
       // DBからコピー先のアイテムを取得
       const treeItemsRef = ref(getDatabase(), `trees/${targetTreeId}/items`);
-      get(treeItemsRef)
+      await get(treeItemsRef)
         .then(async (snapshot) => {
           if (snapshot.exists()) {
             const data: TreeItem[] = snapshot.val();
@@ -259,7 +263,7 @@ export const useTaskManagement = () => {
                   const sourcePath = `trees/${currentTree}/${attachedFile}`;
                   const destinationPath = `trees/${targetTreeId}/${attachedFile}`;
                   try {
-                    copyFileInStorage({ sourcePath, destinationPath });
+                    await copyFileInStorage({ sourcePath, destinationPath });
                   } catch (error) {
                     throw new Error('添付ファイルのコピーに失敗しました。\n\n' + error);
                   }
@@ -306,7 +310,7 @@ export const useTaskManagement = () => {
   };
 
   // タスクの移動 ------------------------------
-  const handleMove = (targetTreeId: UniqueIdentifier, targetTaskId: UniqueIdentifier) => {
+  const handleMove = async (targetTreeId: UniqueIdentifier, targetTaskId: UniqueIdentifier) => {
     if (!targetTreeId || !targetTaskId || !currentTree) return;
 
     try {
@@ -318,8 +322,8 @@ export const useTaskManagement = () => {
 
       // DBから移動先のアイテムを取得
       const treeItemsRef = ref(getDatabase(), `trees/${targetTreeId}/items`);
-      get(treeItemsRef)
-        .then((snapshot) => {
+      await get(treeItemsRef)
+        .then(async (snapshot) => {
           if (snapshot.exists()) {
             const data: TreeItem[] = snapshot.val();
             const itemsWithChildren = ensureChildrenProperty(data);
@@ -352,12 +356,12 @@ export const useTaskManagement = () => {
               if (attachedFiles.length > 0) {
                 const functions = getFunctions();
                 const copyFileInStorage = httpsCallable(functions, 'copyFileInStorage');
-                attachedFiles.forEach((attachedFile) => {
+                attachedFiles.forEach(async (attachedFile) => {
                   const sourcePath = `trees/${currentTree}/${attachedFile}`;
                   const destinationPath = `trees/${targetTreeId}/${attachedFile}`;
                   try {
-                    copyFileInStorage({ sourcePath, destinationPath });
-                    deleteFile(attachedFile, currentTree, true);
+                    await copyFileInStorage({ sourcePath, destinationPath });
+                    await deleteFile(attachedFile, currentTree, true);
                   } catch (error) {
                     throw new Error('添付ファイルのコピーに失敗しました。\n\n' + error);
                   }

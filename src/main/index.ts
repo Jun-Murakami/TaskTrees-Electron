@@ -4,6 +4,7 @@ import path, { join } from 'path';
 import { electronApp, optimizer, is } from '@electron-toolkit/utils';
 import contextMenu from 'electron-context-menu';
 import icon from '../../resources/icon.png?asset';
+import express from 'express';
 
 let mainWindow: BrowserWindow | null = null; // mainWindowをグローバル変数として宣言
 interface WindowState {
@@ -15,6 +16,17 @@ interface WindowState {
   };
   isMaximized?: boolean;
 }
+
+const expressApp = express();
+// Expressサーバの設定
+const PORT = 8080;
+// Expressサーバの設定
+expressApp.get('/', (_, res) => {
+  res.send('ElectronのExpressサーバが動作しています');
+});
+expressApp.listen(PORT, () => {
+  console.log(`サーバがポート${PORT}で起動しました。`);
+});
 
 contextMenu({
   showInspectElement: is.dev,
@@ -74,6 +86,10 @@ function createWindow(): void {
     mainWindow.loadURL(process.env['ELECTRON_RENDERER_URL']);
   } else {
     mainWindow.loadFile(join(__dirname, '../renderer/index.html'));
+  }
+
+  if (is.dev) {
+    mainWindow.webContents.openDevTools();
   }
 
   mainWindow.on('close', (e) => {

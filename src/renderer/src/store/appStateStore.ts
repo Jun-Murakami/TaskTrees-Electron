@@ -1,6 +1,7 @@
 import { create } from 'zustand';
 
 type AppState = {
+  isOffline: boolean;
   localTimestamp: number;
   darkMode: boolean;
   hideDoneItems: boolean;
@@ -15,6 +16,7 @@ type AppState = {
   containerWidth: number;
   searchKey: string;
   isEditingText: boolean;
+  setIsOffline: (isOffline: boolean) => void;
   setLocalTimestamp: (localTimestamp: number) => void;
   setDarkMode: (darkMode: boolean) => void;
   setHideDoneItems: (hideDoneItems: boolean) => void;
@@ -32,6 +34,7 @@ type AppState = {
 };
 
 export const useAppStateStore = create<AppState>((set) => ({
+  isOffline: false,
   localTimestamp: 0,
   darkMode: false,
   hideDoneItems: false,
@@ -39,13 +42,14 @@ export const useAppStateStore = create<AppState>((set) => ({
   isLoggedIn: false,
   uid: null,
   email: null,
-  isLoading: false,
+  isLoading: true,
   isWaitingForDelete: false,
   isAccordionExpanded: false,
   isFocusedTreeName: false,
   containerWidth: 0,
   searchKey: '',
   isEditingText: false,
+  setIsOffline: (isOffline) => set({ isOffline }),
   setLocalTimestamp: (localTimestamp) => set({ localTimestamp }),
   setDarkMode: (darkMode) => set({ darkMode }),
   setHideDoneItems: (hideDoneItems) => set({ hideDoneItems }),

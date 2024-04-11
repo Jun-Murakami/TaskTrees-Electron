@@ -1,17 +1,16 @@
 import { useEffect } from 'react';
-import { initializeApp } from 'firebase/app';
+import { getApp, initializeApp } from 'firebase/app';
 import {
-  getAuth,
-  createUserWithEmailAndPassword,
-  signInWithEmailAndPassword,
-  signOut,
-  sendPasswordResetEmail,
+  getAuth, indexedDBLocalPersistence, initializeAuth, GoogleAuthProvider, OAuthProvider, signInWithPopup, signInWithCredential, signInWithEmailAndPassword, createUserWithEmailAndPassword, sendPasswordResetEmail, signOut
 } from 'firebase/auth';
 import { getDatabase, remove, ref, get, set } from 'firebase/database';
 import { getStorage, ref as storageRef, deleteObject, listAll } from 'firebase/storage';
+import { Capacitor } from '@capacitor/core';
+import { FirebaseAuthentication } from '@capacitor-firebase/authentication';
 import { useObserve } from './useObserve';
 import { useAppStateStore } from '../store/appStateStore';
 import { useTreeStateStore } from '../store/treeStateStore';
+import { useInputDialogStore } from '../store/dialogStore';
 
 // Firebaseの設定
 const firebaseConfig = {
@@ -25,11 +24,23 @@ const firebaseConfig = {
   measurementId: import.meta.env.VITE_MEASUREMENT_ID,
 };
 
-const app = initializeApp(firebaseConfig);
-const auth = getAuth(app);
-const db = getDatabase(app);
+initializeApp(firebaseConfig);
+
+const getFirebaseAuth = async () => {
+  if (Capacitor.isNativePlatform()) {
+    return initializeAuth(getApp(), {
+      persistence: indexedDBLocalPersistence,
+    });
+  } else {
+    return getAuth();
+  }
+};
+
+const auth = getFirebaseAuth();
 
 export const useAuth = () => {
+  const isOffline = useAppStateStore((state) => state.isOffline);
+  const setIsOffline = useAppStateStore((state) => state.setIsOffline);
   const uid = useAppStateStore((state) => state.uid);
   const setUid = useAppStateStore((state) => state.setUid);
   const email = useAppStateStore((state) => state.email);
@@ -41,44 +52,144 @@ export const useAuth = () => {
   const isWaitingForDelete = useAppStateStore((state) => state.isWaitingForDelete);
   const setIsWaitingForDelete = useAppStateStore((state) => state.setIsWaitingForDelete);
   const setItems = useTreeStateStore((state) => state.setItems);
+  const setPrevCurrentTree = useTreeStateStore((state) => state.setPrevCurrentTree);
+  const setPrevItems = useTreeStateStore((state) => state.setPrevItems);
   const treesList = useTreeStateStore((state) => state.treesList);
   const setTreesList = useTreeStateStore((state) => state.setTreesList);
   const setCurrentTree = useTreeStateStore((state) => state.setCurrentTree);
   const setCurrentTreeName = useTreeStateStore((state) => state.setCurrentTreeName);
   const setCurrentTreeMembers = useTreeStateStore((state) => state.setCurrentTreeMembers);
 
+  const showInputDialog = useInputDialogStore((state) => state.showDialog);
+
   const { observeTimeStamp } = useObserve();
 
   // ログイン状態の監視
   useEffect(() => {
-    setIsLoading(true);
-    const unsubscribe = auth.onAuthStateChanged((user) => {
+    const asyncFunc = async () => {
+      if (Capacitor.isNativePlatform() && FirebaseAuthentication) {
+        FirebaseAuthentication.addListener('authStateChange', async (result) => {
+          if (result.user) {
+            setUid(result.user.uid);
+            setEmail(result.user.email);
+          }
+          setIsLoading(false);
+        });
+      }
+      const auth = await getFirebaseAuth();
+      const unsubscribe = auth.onAuthStateChanged(async (user) => {
+        if (user) {
+          setUid(user.uid);
+          setEmail(user.email);
+        }
+        setIsLoading(false);
+      });
+      return () => {
+        unsubscribe();
+        FirebaseAuthentication.removeAllListeners();
+      }
+    };
+    asyncFunc();
+    setTimeout(() => {
+      setIsLoading(false);
+    }, 1000);
+  }, [setIsLoading, setIsLoggedIn, setUid, setEmail]);
+
+  useEffect(() => {
+    const auth = getAuth();
+    const unsubscribe = auth.onAuthStateChanged(async (user) => {
+      setIsLoading(true);
       setIsLoggedIn(!!user);
-      setUid(user?.uid || null);
-      setEmail(user?.email || null);
       setIsLoading(false);
       if (user) {
-        // タイムスタンプの監視を開始して初期設定をロード
-        observeTimeStamp();
+        setUid(user.uid);
+        setEmail(user.email);
+        setIsOffline(false);
       }
     });
 
     return () => unsubscribe();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [setIsLoading, setIsLoggedIn, setUid, setEmail]);
+  }, []);
 
   useEffect(() => {
     if (uid && email) {
-      setIsLoading(true);
-      const asyncFunc = async () => {
-        const setTimeoutPromise = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
-        await setTimeoutPromise(1000);
-        await observeTimeStamp();
-      };
-      asyncFunc();
+      observeTimeStamp();
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [uid, email]);
+
+  // Googleログイン
+  const handleGoogleLogin = async () => {
+    setIsLoading(true);
+    setSystemMessage('ログイン中...');
+    if (Capacitor.isNativePlatform() && FirebaseAuthentication) {
+      // 1. Create credentials on the native layer
+      const result = await FirebaseAuthentication.signInWithGoogle();
+      // 2. Sign in on the web layer using the id token
+      const credential = GoogleAuthProvider.credential(result.credential?.idToken);
+      await signInWithCredential(await auth, credential).then(async () => {
+        setIsLoading(true);
+        setIsLoggedIn(true);
+        setSystemMessage(null);
+      }).catch((error) => {
+        setSystemMessage('Googleログインに失敗しました。\n\n' + error.code);
+      }).finally(() => {
+        setIsLoading(false);
+      });
+    } else {
+      const provider = new GoogleAuthProvider();
+      signInWithPopup(getAuth(), provider)
+        .then(() => {
+          setIsLoggedIn(true);
+          setSystemMessage(null);
+        })
+        .catch((error) => {
+          setSystemMessage('Googleログインに失敗しました。\n\n' + error.code);
+        }).finally(() => {
+          setIsLoading(false);
+        });
+    }
+  };
+
+  //Appleログイン
+  const handleAppleLogin = async () => {
+    setIsLoading(true);
+    setSystemMessage('ログイン中...');
+    if (Capacitor.isNativePlatform() && FirebaseAuthentication) {
+      // 1. Create credentials on the native layer
+      const result = await FirebaseAuthentication.signInWithApple();
+      // 2. Sign in on the web layer using the id token
+      const provider = new OAuthProvider('apple.com');
+      if (!result.credential) {
+        setSystemMessage('Appleログインに失敗しました。\n\ncredentialが取得できませんでした。');
+        setIsLoading(false);
+        return;
+      }
+      const credential = provider.credential({ idToken: result.credential.idToken, rawNonce: result.credential.nonce });
+      await signInWithCredential(await auth, credential).then(async () => {
+        setIsLoading(true);
+        setIsLoggedIn(true);
+        setSystemMessage(null);
+      }).catch((error) => {
+        setSystemMessage('Appleログインに失敗しました。\n\n' + error.code);
+      }).finally(() => {
+        setIsLoading(false);
+      });
+    } else {
+      const provider = new OAuthProvider('apple.com');
+      signInWithPopup(getAuth(), provider)
+        .then(() => {
+          setIsLoggedIn(true);
+          setSystemMessage(null);
+        })
+        .catch((error) => {
+          setSystemMessage('Appleログインに失敗しました。\n\n' + error.code);
+        }).finally(() => {
+          setIsLoading(false);
+        });
+    }
+  };
 
   // メールアドレスとパスワードでのログイン
   const handleEmailLogin = async (email: string, password: string) => {
@@ -87,24 +198,19 @@ export const useAuth = () => {
       return;
     }
     setSystemMessage('ログイン中...');
-    await signInWithEmailAndPassword(auth, email, password)
-      .then(() => {
-        setIsLoggedIn(true);
-        setSystemMessage(null);
-      })
-      .catch((error) => {
-        if (error.code === 'auth/invalid-credential') {
-          setSystemMessage(
-            'ログインに失敗しました。メールアドレスとパスワードを確認してください。Googleログインで使用したメールアドレスでログインする場合は、パスワードのリセットを行ってください。'
-          );
-        } else if (error.code === 'auth/invalid-login-credentials') {
-          setSystemMessage(
-            'ログインに失敗しました。メールアドレスとパスワードを確認してください。Googleログインで使用したメールアドレスでログインする場合は、パスワードのリセットを行ってください。'
-          );
-        } else {
-          setSystemMessage('ログインに失敗しました。\n\n' + error.code);
-        }
-      });
+    signInWithEmailAndPassword(await auth, email, password).then(() => {
+      setIsLoading(true);
+      setIsLoggedIn(true);
+      setSystemMessage(null);
+    }).catch((error) => {
+      if (error.code === 'auth/invalid-credential') {
+        setSystemMessage('ログインに失敗しました。メールアドレスとパスワードを確認してください。Googleログインで使用したメールアドレスでログインする場合は、パスワードのリセットを行ってください。');
+      } else if (error.code === 'auth/invalid-login-credentials') {
+        setSystemMessage('ログインに失敗しました。メールアドレスとパスワードを確認してください。Googleログインで使用したメールアドレスでログインする場合は、パスワードのリセットを行ってください。');
+      } else {
+        setSystemMessage('ログインに失敗しました。\n\n' + error.code);
+      }
+    });
   };
 
   // メールアドレスとパスワードでサインアップ
@@ -113,29 +219,54 @@ export const useAuth = () => {
       setSystemMessage('メールアドレスとパスワードを入力してください。');
       return;
     }
-    createUserWithEmailAndPassword(await auth, email, password)
-      .then(() => {
-        setIsLoggedIn(true);
-        setSystemMessage(null);
-      })
-      .catch((error) => {
-        console.error(error);
-        if (error.code === 'auth/email-already-in-use') {
-          setSystemMessage('このメールアドレスは既に使用されています。');
-        } else if (error.code === 'auth/weak-password') {
-          setSystemMessage('パスワードが弱すぎます。6文字以上のパスワードを設定してください。');
-        } else {
-          setSystemMessage('サインアップに失敗しました。\n\n' + error.code);
-        }
-      });
+    if (Capacitor.isNativePlatform() && FirebaseAuthentication) {
+      await FirebaseAuthentication.createUserWithEmailAndPassword({ email, password })
+        .then(() => {
+          setIsLoggedIn(true);
+          setSystemMessage(null);
+        })
+        .catch((error) => {
+          if (error.code === 'auth/email-already-in-use') {
+            setSystemMessage('このメールアドレスは既に使用されています。');
+          } else if (error.code === 'auth/weak-password') {
+            setSystemMessage('パスワードが弱すぎます。6文字以上のパスワードを設定してください。');
+          } else {
+            setSystemMessage('サインアップに失敗しました。\n\n' + error.code);
+          }
+        });
+    } else {
+      createUserWithEmailAndPassword(await auth, email, password)
+        .then(() => {
+          setIsLoggedIn(true);
+          setSystemMessage(null);
+        })
+        .catch((error) => {
+          console.error(error);
+          if (error.code === 'auth/email-already-in-use') {
+            setSystemMessage('このメールアドレスは既に使用されています。');
+          } else if (error.code === 'auth/weak-password') {
+            setSystemMessage('パスワードが弱すぎます。6文字以上のパスワードを設定してください。');
+          } else {
+            setSystemMessage('サインアップに失敗しました。\n\n' + error.code);
+          }
+        });
+    }
   };
 
   // パスワードをリセット
-  const handleResetPassword = async (receivedEmail: string = '') => {
-    if (receivedEmail === '') {
+  const handleResetPassword = async () => {
+    const result = await showInputDialog(
+      'パスワードをリセットするメールアドレスを入力してください',
+      'Password Reset',
+      'メールアドレス',
+      '',
+      false
+    );
+    console.log(result);
+    if (result === '') {
       return;
     }
-    sendPasswordResetEmail(auth, receivedEmail)
+    sendPasswordResetEmail(await auth, result)
       .then(() => {
         setSystemMessage('パスワードリセットメールを送信しました。メールボックスを確認してください。');
       })
@@ -150,17 +281,28 @@ export const useAuth = () => {
 
   // ログアウト
   const handleLogout = async () => {
-    signOut(auth)
-      .then(() => {
+    signOut(getAuth())
+      .then(async () => {
+        if (Capacitor.isNativePlatform() && FirebaseAuthentication && !isOffline) {
+          await FirebaseAuthentication.signOut();
+          FirebaseAuthentication.removeAllListeners();
+        }
         setIsLoggedIn(false);
         setUid(null);
         setEmail(null);
+        setPrevCurrentTree(null);
+        setPrevItems([]);
         setItems([]);
         setTreesList([]);
         setCurrentTree(null);
         setCurrentTreeName(null);
         setCurrentTreeMembers(null);
-        if (!isWaitingForDelete) setSystemMessage('ログアウトしました。');
+        if (!isWaitingForDelete && !isOffline) {
+          setSystemMessage('ログアウトしました。');
+        } else {
+          setSystemMessage('');
+        }
+        setIsOffline(false);
       })
       .catch((error) => {
         console.error(error);
@@ -169,7 +311,8 @@ export const useAuth = () => {
 
   // アカウント削除
   const handleDeleteAccount = async () => {
-    const user = auth.currentUser;
+    const authObject = await getFirebaseAuth();
+    const user = authObject.currentUser;
     if (user) {
       setIsLoading(true);
 
@@ -177,9 +320,9 @@ export const useAuth = () => {
       const deletePromises: Promise<void>[] = [];
       // treesListを反復処理して、ユーザーのツリーを削除
       for (const tree of treesList) {
-        const treeRef = ref(db, `trees/${tree.id}`);
+        const treeRef = ref(getDatabase(), `trees/${tree.id}`);
         // membersをDBから取得して、自分のユーザー以外のユーザーIDが含まれていたらメンバーから自分を削除するだけにする
-        const treeMembersRef = ref(db, `trees/${tree.id}/members`);
+        const treeMembersRef = ref(getDatabase(), `trees/${tree.id}/members`);
         await get(treeMembersRef)
           .then((snapshot) => {
             if (snapshot.exists()) {
@@ -237,7 +380,7 @@ export const useAuth = () => {
           });
       }
       // ユーザーのappStateを削除
-      const appStateRef = ref(db, `users/${user.uid}`);
+      const appStateRef = await ref(getDatabase(), `users/${user.uid}`);
       await remove(appStateRef)
         .then(() => {
           console.log('データが正常に削除されました。');
@@ -272,5 +415,5 @@ export const useAuth = () => {
     }
     setIsWaitingForDelete(false);
   };
-  return { handleEmailLogin, handleSignup, handleResetPassword, handleLogout, handleDeleteAccount };
+  return { handleGoogleLogin, handleAppleLogin, handleEmailLogin, handleSignup, handleResetPassword, handleLogout, handleDeleteAccount };
 };
