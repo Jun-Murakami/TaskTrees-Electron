@@ -13,10 +13,12 @@ type AppState = {
   isLoading: boolean;
   isWaitingForDelete: boolean;
   isAccordionExpanded: boolean;
+  isQuickMemoExpanded: boolean;
   isFocusedTreeName: boolean;
   containerWidth: number;
   searchKey: string;
   isEditingText: boolean;
+  quickMemoText: string;
   setIsOffline: (isOffline: boolean) => void;
   setGoogleToken: (googleToken: string | null) => void;
   setLocalTimestamp: (localTimestamp: number) => void;
@@ -29,10 +31,12 @@ type AppState = {
   setIsLoading: (isLoading: boolean) => void;
   setIsWaitingForDelete: (isWaitingForDelete: boolean) => void;
   setIsAccordionExpanded: (isAccordionExpanded: boolean) => void;
+  setIsQuickMemoExpanded: (isQuickMemoExpanded: boolean) => void;
   setIsFocusedTreeName: (isFocusedTreeName: boolean) => void;
   setContainerWidth: (containerWidth: number) => void;
   setSearchKey: (searchKey: string) => void;
   setIsEditingText: (isEditingText: boolean) => void;
+  setQuickMemoText: (quickMemoText: string) => void;
 };
 
 export const useAppStateStore = create<AppState>((set) => ({
@@ -42,16 +46,18 @@ export const useAppStateStore = create<AppState>((set) => ({
   darkMode: false,
   hideDoneItems: false,
   systemMessage: null,
-  isLoggedIn: false,
+  isLoggedIn: true,
   uid: null,
   email: null,
   isLoading: true,
   isWaitingForDelete: false,
   isAccordionExpanded: false,
+  isQuickMemoExpanded: false,
   isFocusedTreeName: false,
   containerWidth: 0,
   searchKey: '',
   isEditingText: false,
+  quickMemoText: '',
   setIsOffline: (isOffline) => set({ isOffline }),
   setGoogleToken: (googleToken) => set({ googleToken }),
   setLocalTimestamp: (localTimestamp) => set({ localTimestamp }),
@@ -64,8 +70,10 @@ export const useAppStateStore = create<AppState>((set) => ({
   setIsLoading: (isLoading) => set({ isLoading }),
   setIsWaitingForDelete: (isWaitingForDelete) => set({ isWaitingForDelete }),
   setIsAccordionExpanded: (isAccordionExpanded) => set({ isAccordionExpanded }),
+  setIsQuickMemoExpanded: (isQuickMemoExpanded) => set({ isQuickMemoExpanded }),
   setIsFocusedTreeName: (isFocusedTreeName) => set({ isFocusedTreeName }),
   setContainerWidth: (containerWidth) => set({ containerWidth }),
   setSearchKey: (searchKey) => set({ searchKey }),
   setIsEditingText: (isEditingText) => set({ isEditingText }),
+  setQuickMemoText: (quickMemoText) => set({ quickMemoText }),
 }));

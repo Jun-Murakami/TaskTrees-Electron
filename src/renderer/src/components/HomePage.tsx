@@ -12,6 +12,7 @@ import DeleteForeverIcon from '@mui/icons-material/DeleteForever';
 import GoogleIcon from '@mui/icons-material/Google';
 import { TreeSettingsAccordion } from './TreeSettingsAccordion';
 import { SortableTree } from './SortableTree/SortableTree';
+import { QuickMemo } from './QuickMemo';
 import { useDialogStore } from '../store/dialogStore';
 import { useInputDialogStore } from '../store/dialogStore';
 import { useAppStateStore } from '../store/appStateStore';
@@ -29,6 +30,7 @@ export function HomePage() {
   const systemMessage = useAppStateStore((state) => state.systemMessage); // システムメッセージ
   const isWaitingForDelete = useAppStateStore((state) => state.isWaitingForDelete); // アカウント削除の確認状態
   const setIsWaitingForDelete = useAppStateStore((state) => state.setIsWaitingForDelete); // アカウント削除の確認状態を変更
+  const isQuickMemoExpanded = useAppStateStore((state) => state.isQuickMemoExpanded); // クイックメモの展開状態
   const currentTree = useTreeStateStore((state) => state.currentTree);
 
   const isDialogVisible = useDialogStore((state: { isDialogVisible: boolean }) => state.isDialogVisible);
@@ -54,6 +56,7 @@ export function HomePage() {
         !isWaitingForDelete ? (
           // ログイン後のメイン画面
           <>
+            <QuickMemo />
             <ResponsiveDrawer handleLogout={async () => await handleLogout()} />
             <Box
               sx={{
@@ -72,7 +75,15 @@ export function HomePage() {
               {currentTree ? (
                 <>
                   <TreeSettingsAccordion />
-                  <Box sx={{ maxWidth: '900px', width: '100%', marginX: 'auto', mb: 6 }} id='tree-container'>
+                  <Box
+                    sx={{ maxWidth: '900px', width: '100%', marginX: 'auto', mb: isQuickMemoExpanded ? 30 : 8 }}
+                    id='tree-container'
+                  >
+                    <Box
+                      sx={{
+                        height: { xs: '90px', sm: '138px' },
+                      }}
+                    />
                     <SortableTree collapsible indicator removable />
                   </Box>
                 </>

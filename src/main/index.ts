@@ -43,10 +43,12 @@ function startServer() {
 function stopServer() {
   if (server) {
     // サーバが起動している場合のみ停止
-    server.close(() => {
-      console.log('Server is stopped.');
-    });
-    server = null; // サーバインスタンスをクリア
+    setTimeout(() => {
+      server?.close(() => {
+        console.log('Server is stopped.');
+      });
+      server = null; // サーバインスタンスをクリア
+    }, 5000);
   }
 }
 
