@@ -111,9 +111,7 @@ export const useAuth = () => {
   useEffect(() => {
     const auth = getAuth();
     const unsubscribe = auth.onAuthStateChanged(async (user) => {
-      setIsLoading(true);
       setIsLoggedIn(!!user);
-      setIsLoading(false);
       if (user) {
         setUid(user.uid);
         setEmail(user.email);
@@ -127,6 +125,7 @@ export const useAuth = () => {
 
   useEffect(() => {
     if (uid && email) {
+      if (!isLoading) setIsLoading(true);
       observeTimeStamp();
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -138,21 +137,24 @@ export const useAuth = () => {
     setSystemMessage('ログイン中...');
     if (Capacitor.isNativePlatform() && FirebaseAuthentication) {
       // 1. Create credentials on the native layer
-      const result = await FirebaseAuthentication.signInWithGoogle();
-      // 2. Sign in on the web layer using the id token
-      const credential = GoogleAuthProvider.credential(result.credential?.idToken);
-      await signInWithCredential(await auth, credential)
-        .then(async () => {
-          setIsLoading(true);
-          setIsLoggedIn(true);
-          setSystemMessage(null);
-        })
-        .catch((error) => {
-          setSystemMessage('Googleログインに失敗しました。:1\n\n' + error.code);
-        })
-        .finally(() => {
-          setIsLoading(false);
-        });
+      try {
+        const result = await FirebaseAuthentication.signInWithGoogle();
+        // 2. Sign in on the web layer using the id token
+        const credential = GoogleAuthProvider.credential(result.credential?.idToken);
+        await signInWithCredential(await auth, credential)
+          .then(async () => {
+            setIsLoggedIn(true);
+            setSystemMessage(null);
+          })
+          .catch((error) => {
+            setSystemMessage('Googleログインに失敗しました。\n\n' + error.code);
+            setIsLoading(false);
+          });
+      } catch (error) {
+        setSystemMessage('Googleログインに失敗しました。\n\n' + error);
+        setIsLoading(false);
+        return;
+      }
     } else {
       const provider = new GoogleAuthProvider();
       signInWithPopup(getAuth(), provider)
@@ -161,9 +163,7 @@ export const useAuth = () => {
           setSystemMessage(null);
         })
         .catch((error) => {
-          setSystemMessage('Googleログインに失敗しました。:2\n\n' + error.code);
-        })
-        .finally(() => {
+          setSystemMessage('Googleログインに失敗しました。\n\n' + error.code);
           setIsLoading(false);
         });
     }
@@ -197,27 +197,30 @@ export const useAuth = () => {
     setSystemMessage('ログイン中...');
     if (Capacitor.isNativePlatform() && FirebaseAuthentication) {
       // 1. Create credentials on the native layer
-      const result = await FirebaseAuthentication.signInWithApple();
-      // 2. Sign in on the web layer using the id token
-      const provider = new OAuthProvider('apple.com');
-      if (!result.credential) {
-        setSystemMessage('Appleログインに失敗しました。\n\ncredentialが取得できませんでした。');
+      try {
+        const result = await FirebaseAuthentication.signInWithApple();
+        // 2. Sign in on the web layer using the id token
+        const provider = new OAuthProvider('apple.com');
+        if (!result.credential) {
+          setSystemMessage('Appleログインに失敗しました。\n\ncredentialが取得できませんでした。');
+          setIsLoading(false);
+          return;
+        }
+        const credential = provider.credential({ idToken: result.credential.idToken, rawNonce: result.credential.nonce });
+        await signInWithCredential(await auth, credential)
+          .then(async () => {
+            setIsLoggedIn(true);
+            setSystemMessage(null);
+          })
+          .catch((error) => {
+            setSystemMessage('Appleログインに失敗しました。\n\n' + error.code);
+            setIsLoading(false);
+          });
+      } catch (error) {
+        setSystemMessage('Appleログインに失敗しました。\n\n' + error);
         setIsLoading(false);
         return;
       }
-      const credential = provider.credential({ idToken: result.credential.idToken, rawNonce: result.credential.nonce });
-      await signInWithCredential(await auth, credential)
-        .then(async () => {
-          setIsLoading(true);
-          setIsLoggedIn(true);
-          setSystemMessage(null);
-        })
-        .catch((error) => {
-          setSystemMessage('Appleログインに失敗しました。\n\n' + error.code);
-        })
-        .finally(() => {
-          setIsLoading(false);
-        });
     } else {
       const provider = new OAuthProvider('apple.com');
       signInWithPopup(getAuth(), provider)
@@ -227,8 +230,6 @@ export const useAuth = () => {
         })
         .catch((error) => {
           setSystemMessage('Appleログインに失敗しました。\n\n' + error.code);
-        })
-        .finally(() => {
           setIsLoading(false);
         });
     }
@@ -241,9 +242,9 @@ export const useAuth = () => {
       return;
     }
     setSystemMessage('ログイン中...');
+    setIsLoading(true);
     signInWithEmailAndPassword(await auth, email, password)
       .then(() => {
-        setIsLoading(true);
         setIsLoggedIn(true);
         setSystemMessage(null);
       })
@@ -259,6 +260,7 @@ export const useAuth = () => {
         } else {
           setSystemMessage('ログインに失敗しました。\n\n' + error.code);
         }
+        setIsLoading(false);
       });
   };
 
