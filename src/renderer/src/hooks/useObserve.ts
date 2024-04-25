@@ -6,7 +6,7 @@ import { useAppStateManagement } from './useAppStateManagement';
 import { useDialogStore } from '../store/dialogStore';
 import { useError } from './useError';
 import { useDatabase } from './useDatabase';
-import { getDatabase, ref, onValue, } from 'firebase/database';
+import { getDatabase, ref, onValue } from 'firebase/database';
 import { useAppStateStore } from '../store/appStateStore';
 import { Preferences } from '@capacitor/preferences';
 
@@ -27,7 +27,7 @@ export const useObserve = () => {
   const showDialog = useDialogStore((state) => state.showDialog);
 
   const { loadTreesList, loadCurrentTreeData, handleLoadedContent } = useTreeManagement();
-  const { saveItemsDb, saveTimeStampDb } = useDatabase();
+  const { saveItemsDb } = useDatabase();
   const { loadSettingsFromDb, loadQuickMemoFromDb, saveQuickMemoDb } = useAppStateManagement();
   const { handleError } = useError();
 
@@ -49,7 +49,11 @@ export const useObserve = () => {
       const name = treeNameOffline ? treeNameOffline : 'オフラインツリー';
       const quickMemo = quickMemoOffline ? quickMemoOffline : '';
       const conbinedQuickMemoText = quickMemoText + '\n\n' + quickMemo;
-      const result = await showDialog('オフラインツリーが見つかりました。このツリーを読み込みますか？', 'オフラインツリーの読み込み', true);
+      const result = await showDialog(
+        'オフラインツリーが見つかりました。このツリーを読み込みますか？',
+        'オフラインツリーの読み込み',
+        true
+      );
       if (result) {
         await handleLoadedContent(JSON.stringify({ name, items }));
         setQuickMemoText(conbinedQuickMemoText);
@@ -57,7 +61,11 @@ export const useObserve = () => {
         await Preferences.remove({ key: `treeName_offline` });
         await Preferences.remove({ key: `quick_memo_offline` });
       } else {
-        const removeResult = await showDialog('オフラインツリーを削除しますか？削除せず、次回ログイン時に読み込むこともできます。', 'オフラインツリーの削除', true);
+        const removeResult = await showDialog(
+          'オフラインツリーを削除しますか？削除せず、次回ログイン時に読み込むこともできます。',
+          'オフラインツリーの削除',
+          true
+        );
         if (removeResult) {
           await Preferences.remove({ key: `items_offline` });
           await Preferences.remove({ key: `treeName_offline` });
@@ -79,7 +87,6 @@ export const useObserve = () => {
         if (currentTree) {
           await loadCurrentTreeData(currentTree);
         }
-
       }
       setIsLoading(false);
     });
@@ -138,7 +145,6 @@ export const useObserve = () => {
             value: quickMemoText,
           });
         } else {
-          saveTimeStampDb();
           saveQuickMemoDb(quickMemoText);
         }
       } catch (error) {
@@ -152,6 +158,6 @@ export const useObserve = () => {
   }, [quickMemoText]);
 
   return {
-    observeTimeStamp
+    observeTimeStamp,
   };
-}
+};
