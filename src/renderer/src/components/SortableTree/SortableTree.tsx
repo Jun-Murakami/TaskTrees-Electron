@@ -132,6 +132,7 @@ export function SortableTree({ collapsible, indicator = false, indentationWidth 
 
     // コンポーネントのアンマウント時にイベントリスナーを削除
     return () => window.removeEventListener('resize', handleResize);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const measuring = {
@@ -229,7 +230,7 @@ export function SortableTree({ collapsible, indicator = false, indentationWidth 
         {flattenedItems
           .filter(({ done }) => (hideDoneItems ? !done : true))
           .filter(({ value }) => value.toLowerCase().includes(searchKey.toLowerCase()))
-          .filter((item) => (searchKey !== '' ? !isDescendantOfTrash(items, item.id) : true))
+          //.filter((item) => (searchKey !== '' ? !isDescendantOfTrash(items, item.id) : true))
           .map(({ id, value, done, attachedFile, children, collapsed, depth }) => (
             <SortableTreeItem
               key={id}

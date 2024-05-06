@@ -19,6 +19,7 @@ type AppState = {
   searchKey: string;
   isEditingText: boolean;
   quickMemoText: string;
+  isLoadedMemoFromDb: boolean;
   setIsOffline: (isOffline: boolean) => void;
   setGoogleToken: (googleToken: string | null) => void;
   setLocalTimestamp: (localTimestamp: number) => void;
@@ -37,6 +38,7 @@ type AppState = {
   setSearchKey: (searchKey: string) => void;
   setIsEditingText: (isEditingText: boolean) => void;
   setQuickMemoText: (quickMemoText: string) => void;
+  setIsLoadedMemoFromDb: (isLoadedMemoFromDb: boolean) => void;
 };
 
 export const useAppStateStore = create<AppState>((set) => ({
@@ -58,6 +60,7 @@ export const useAppStateStore = create<AppState>((set) => ({
   searchKey: '',
   isEditingText: false,
   quickMemoText: '',
+  isLoadedMemoFromDb: false,
   setIsOffline: (isOffline) => set({ isOffline }),
   setGoogleToken: (googleToken) => set({ googleToken }),
   setLocalTimestamp: (localTimestamp) => set({ localTimestamp }),
@@ -76,4 +79,5 @@ export const useAppStateStore = create<AppState>((set) => ({
   setSearchKey: (searchKey) => set({ searchKey }),
   setIsEditingText: (isEditingText) => set({ isEditingText }),
   setQuickMemoText: (quickMemoText) => set({ quickMemoText }),
+  setIsLoadedMemoFromDb: (isLoadedMemoFromDb) => set({ isLoadedMemoFromDb }),
 }));
