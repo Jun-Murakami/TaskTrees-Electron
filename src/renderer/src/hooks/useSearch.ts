@@ -16,26 +16,25 @@ export const useSearch = () => {
     if (item.value.toLowerCase().includes(searchKey.toLowerCase())) {
       return true;
     }
-    return item.children.some(child => containsSearchKey(child, searchKey));
+    return item.children.some((child) => containsSearchKey(child, searchKey));
   }, []);
 
   useEffect(() => {
     if (searchKey || searchKey !== '') {
       const asyncFunc = async () => {
         const result = await idb.treestate
-          .filter(tree => tree.items.some(item => containsSearchKey(item, searchKey)))
+          .filter((tree) => tree.items.some((item) => containsSearchKey(item, searchKey)))
           .toArray();
         if (result) {
-          const ensuredResult = result.map(tree => ({ id: tree.id!, name: tree.name! }));
+          const ensuredResult = result.map((tree) => ({ id: tree.id!, name: tree.name! }));
           setSearchResults(ensuredResult);
         }
-      }
+      };
       asyncFunc();
     } else {
       setSearchResults(treesList);
     }
   }, [searchKey, setSearchResults, treesList, containsSearchKey]);
-
 
   const searchDocument = () => {
     const matchingNodes: { node: Node; matchIndexes: number[] }[] = [];
@@ -111,7 +110,7 @@ export const useSearch = () => {
     }
   };
 
-  // Prev ボタンクリック時の処理
+  // Prev ボタンクリック時の処理 ----------------------------------------------
   const handlePrevButtonClick = () => {
     const matches = searchDocument();
     if (matches.length === 0) return;
@@ -130,7 +129,7 @@ export const useSearch = () => {
     selectText(matches[newIndex].node, searchKey, matches[newIndex].matchIndexes[newMatchIndex]);
   };
 
-  // Next ボタンクリック時の処理
+  // Next ボタンクリック時の処理 ----------------------------------------------
   const handleNextButtonClick = () => {
     const matches = searchDocument();
     if (matches.length === 0) return;
@@ -151,4 +150,3 @@ export const useSearch = () => {
 
   return { handlePrevButtonClick, handleNextButtonClick };
 };
-
