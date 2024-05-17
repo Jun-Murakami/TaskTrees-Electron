@@ -6,6 +6,7 @@ import { useDatabase } from '../hooks/useDatabase';
 
 export const useElectron = () => {
   const setGoogleToken = useAppStateStore((state) => state.setGoogleToken);
+  const darkMode = useAppStateStore((state) => state.darkMode);
   const isLoggedIn = useAppStateStore((state) => state.isLoggedIn);
   const currentTree = useTreeStateStore((state) => state.currentTree);
 
@@ -64,6 +65,11 @@ export const useElectron = () => {
       window.electron.removeSaveAllTreesListener();
     };
   }, [handleDownloadAllTrees]);
+
+  // ダークモードの状態を監視し、変更があれば反映
+  useEffect(() => {
+    window.electron.setDarkMode(darkMode);
+  }, [darkMode]);
 
   // ログイン状態によってメニューの有効無効を切り替える
   useEffect(() => {
