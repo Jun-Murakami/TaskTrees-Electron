@@ -101,7 +101,7 @@ export const useAttachedFile = () => {
       if (error instanceof Error && !error.message.includes('Share')) {
         const result = await showDialog(
           'ファイルのダウンロードに失敗しました。ファイルが削除されている可能性があります。データベースからこのファイルの添付を削除しますか？\n\n' +
-          error,
+            error,
           'Error',
           true
         );
@@ -148,7 +148,7 @@ export const useAttachedFile = () => {
       setIsLoading(false);
       const result = await showDialog(
         '添付ファイルの削除に失敗しました。既にファイルが削除されている可能性があります。データベースからファイルの参照を削除しますか？\n\n' +
-        error,
+          error,
         'Error',
         true
       );

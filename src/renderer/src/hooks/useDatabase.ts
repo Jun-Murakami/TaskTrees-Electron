@@ -97,14 +97,21 @@ export const useDatabase = () => {
     try {
       // newItemsの内容をチェック
       if (!isTreeItemArray(newItems)) {
-        await showDialog('ツリーデータが不正のため、データベースへの保存がキャンセルされました。修正するにはツリーデータをダウンロードし、手動で修正してください。\n\n※ツリーデータが配列ではありません。', 'Error');
+        await showDialog(
+          'ツリーデータが不正のため、データベースへの保存がキャンセルされました。修正するにはツリーデータをダウンロードし、手動で修正してください。\n\n※ツリーデータが配列ではありません。',
+          'Error'
+        );
         return;
       }
 
       // newItemsの内容を詳細にチェック
       const result = validateTreeItems(newItems);
       if (result !== '') {
-        await showDialog('ツリーデータが不正のため、データベースへの保存がキャンセルされました。修正するにはツリーデータをダウンロードし、手動で修正してください。\n\n' + result, 'Error');
+        await showDialog(
+          'ツリーデータが不正のため、データベースへの保存がキャンセルされました。修正するにはツリーデータをダウンロードし、手動で修正してください。\n\n' +
+            result,
+          'Error'
+        );
         return;
       }
 
@@ -202,7 +209,10 @@ export const useDatabase = () => {
 
           if (missingTrees.length > 0) {
             await saveTreesListDb(orderedTreesList, true);
-            await showDialog('１つ以上のツリーが削除されたか、アクセス権限が変更されました。\n\n' + missingTrees.join('\n'), 'Information');
+            await showDialog(
+              '１つ以上のツリーが削除されたか、アクセス権限が変更されました。\n\n' + missingTrees.join('\n'),
+              'Information'
+            );
           }
 
           return orderedTreesList;

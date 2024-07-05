@@ -291,7 +291,7 @@ export function validateTreeItems(items: TreeItems): string {
     }
     idSet.add(item.id);
 
-    if (item.value === "Trash") {
+    if (item.value === 'Trash') {
       trashCount++;
     }
 

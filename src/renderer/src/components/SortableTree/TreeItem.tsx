@@ -361,24 +361,24 @@ export const TreeItem = forwardRef<HTMLDivElement, TreeItemProps>(
       backgroundColor: isDragOver
         ? theme.palette.action.focus
         : darkMode
-        ? depth >= 4
-          ? theme.palette.grey[800]
-          : depth === 3
-          ? '#303030'
-          : depth === 2
-          ? theme.palette.grey[900]
-          : depth === 1
-          ? '#1a1a1a'
-          : theme.palette.background.default
-        : depth >= 4
-        ? theme.palette.grey[300]
-        : depth === 3
-        ? theme.palette.grey[200]
-        : depth === 2
-        ? theme.palette.grey[100]
-        : depth === 1
-        ? theme.palette.grey[50]
-        : theme.palette.background.default,
+          ? depth >= 4
+            ? theme.palette.grey[800]
+            : depth === 3
+              ? '#303030'
+              : depth === 2
+                ? theme.palette.grey[900]
+                : depth === 1
+                  ? '#1a1a1a'
+                  : theme.palette.background.default
+          : depth >= 4
+            ? theme.palette.grey[300]
+            : depth === 3
+              ? theme.palette.grey[200]
+              : depth === 2
+                ? theme.palette.grey[100]
+                : depth === 1
+                  ? theme.palette.grey[50]
+                  : theme.palette.background.default,
       borderColor: theme.palette.divider,
       boxSizing: 'border-box',
       ...(clone && {
