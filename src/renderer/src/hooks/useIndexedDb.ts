@@ -139,6 +139,20 @@ export const useIndexedDb = () => {
     }
   };
 
+  // Indexedデータベースからダークモードの設定を読み込む ------------------------------------------------
+  const loadDarkModeFromIdb = async () => {
+    try {
+      const appState = await idb.appstate.get(1);
+      if (appState) {
+        return appState.settings.darkMode;
+      }
+    } catch (error) {
+      console.error('Failed to load dark mode from IndexedDB', error);
+      return false;
+    }
+    return false; // デフォルト値
+  };
+
   // Indexedデータベースからクイックメモを読み込む ------------------------------------------------
   const loadQuickMemoFromIdb = async () => {
     if (!uid) {
@@ -438,6 +452,7 @@ export const useIndexedDb = () => {
     syncDb,
     checkAndSyncDb,
     loadSettingsFromIdb,
+    loadDarkModeFromIdb,
     loadQuickMemoFromIdb,
     loadTreesListFromIdb,
     loadCurrentTreeDataFromIdb,

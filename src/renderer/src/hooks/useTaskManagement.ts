@@ -42,7 +42,7 @@ export const useTaskManagement = () => {
   const handleValueChange = (id: UniqueIdentifier, newValue: string) => {
     const newItems = setProperty(items, id, 'value', () => newValue);
     setItems(newItems);
-  };
+  }
 
   // タスクの削除 ------------------------------
   function handleRemove(id: UniqueIdentifier | undefined) {
@@ -73,7 +73,7 @@ export const useTaskManagement = () => {
             if (!currentTree) {
               setIsLoading(false);
               return;
-            }
+            };
             deleteFile(attachedFile, currentTree);
           });
         } catch (error) {
@@ -166,7 +166,7 @@ export const useTaskManagement = () => {
         if (item.id === parentId) {
           const filteredChildren: TreeItem[] = [];
           for (const child of item.children) {
-            if (!(child.done && !child.children.some((grandchild) => !grandchild.done))) {
+            if (!((child.done) && !child.children.some((grandchild) => !grandchild.done))) {
               child.children = await removeDoneDescendants(child.children, child.id);
               filteredChildren.push(child);
             } else {
@@ -236,6 +236,7 @@ export const useTaskManagement = () => {
             const itemsWithChildren = ensureChildrenProperty(data);
             // 取得したデータがTreeItem[]型であることを確認
             if (isTreeItemArray(itemsWithChildren)) {
+
               // コピー用アイテムのIDを子要素も含めてすべて振りなおす
               const newTaskIdStart = findMaxId(itemsWithChildren) + 1;
               const reIdItems = (items: TreeItems, newIdStart: number): TreeItems => {
@@ -277,9 +278,9 @@ export const useTaskManagement = () => {
               const trashIndex = itemsWithChildren.find((item) => item.id === 'trash');
               const newItems = trashIndex
                 ? itemsWithChildren
-                    .slice(0, itemsWithChildren.indexOf(trashIndex))
-                    .concat(reIdItemsCopy)
-                    .concat(itemsWithChildren.slice(itemsWithChildren.indexOf(trashIndex)))
+                  .slice(0, itemsWithChildren.indexOf(trashIndex))
+                  .concat(reIdItemsCopy)
+                  .concat(itemsWithChildren.slice(itemsWithChildren.indexOf(trashIndex)))
                 : itemsWithChildren.concat(reIdItemsCopy);
               if (newItems && trashIndex) {
                 if (targetTreeId === currentTree) {
@@ -334,6 +335,7 @@ export const useTaskManagement = () => {
             const itemsWithChildren = ensureChildrenProperty(data);
             // 取得したデータがTreeItem[]型であることを確認
             if (isTreeItemArray(itemsWithChildren)) {
+
               // 移動用アイテムのIDを子要素も含めてすべて振りなおす
               const newTaskIdStart = findMaxId(itemsWithChildren) + 1;
               const reIdItems = (items: TreeItems, newIdStart: number): TreeItems => {
@@ -376,9 +378,9 @@ export const useTaskManagement = () => {
               const trashIndex = itemsWithChildren.find((item) => item.id === 'trash');
               const newItems = trashIndex
                 ? itemsWithChildren
-                    .slice(0, itemsWithChildren.indexOf(trashIndex))
-                    .concat(reIdItemsCopy)
-                    .concat(itemsWithChildren.slice(itemsWithChildren.indexOf(trashIndex)))
+                  .slice(0, itemsWithChildren.indexOf(trashIndex))
+                  .concat(reIdItemsCopy)
+                  .concat(itemsWithChildren.slice(itemsWithChildren.indexOf(trashIndex)))
                 : itemsWithChildren.concat(reIdItemsCopy);
 
               if (newItems && trashIndex) {
@@ -425,7 +427,7 @@ export const useTaskManagement = () => {
       }
       return item;
     });
-  };
+  }
   // 本編
   const handleDoneChange = (id: UniqueIdentifier, done: boolean) => {
     const currentItems = useTreeStateStore.getState().items;
@@ -434,7 +436,7 @@ export const useTaskManagement = () => {
     // 子要素のdone状態も更新
     const newItems = updateChildrenDone(updatedItems, id, done);
     setItems(newItems);
-  };
+  }
 
   // アイテムにファイルを添付する ------------------------------
   const handleAttachFile = (id: UniqueIdentifier, fileName: string) => {
@@ -442,6 +444,23 @@ export const useTaskManagement = () => {
     const newItems = setProperty(currentItems, id, 'attachedFile', () => fileName);
     setItems(newItems);
   };
+
+  // アイテムにタイマーをセットする ------------------------------
+  const handleSetTimer = (id: UniqueIdentifier, timer: string | undefined, isUpLift: boolean | undefined, upLiftMinute: number | undefined, isNotify: boolean | undefined, notifyMinute: number | undefined) => {
+    const currentItems = useTreeStateStore.getState().items;
+    const setTimer = (items: TreeItems, id: UniqueIdentifier, timer: string | undefined, isUpLift: boolean | undefined, upLiftMinute: number | undefined, isNotify: boolean | undefined, notifyMinute: number | undefined): TreeItems => {
+      return items.map((item) => {
+        if (item.id === id) {
+          return { ...item, ['timer']: timer, ['isUpLift']: isUpLift, ['upLiftMinute']: upLiftMinute, ['isNotify']: isNotify, ['notifyMinute']: notifyMinute };
+        } else if (item.children.length) {
+          return { ...item, children: setTimer(item.children, id, timer, isUpLift, upLiftMinute, isNotify, notifyMinute) };
+        }
+        return item;
+      })
+    }
+    const newItems = setTimer(currentItems, id, timer ? timer : undefined, isUpLift ? isUpLift : undefined, upLiftMinute ? upLiftMinute : undefined, isNotify ? isNotify : undefined, notifyMinute ? notifyMinute : undefined);
+    setItems(newItems);
+  }
 
   return {
     handleRemove,
@@ -451,6 +470,7 @@ export const useTaskManagement = () => {
     handleMove,
     handleRestore,
     handleAttachFile,
+    handleSetTimer,
     removeTrashDescendants,
     removeTrashDescendantsWithDone,
   };

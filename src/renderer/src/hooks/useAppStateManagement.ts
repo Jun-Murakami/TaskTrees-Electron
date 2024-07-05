@@ -77,7 +77,7 @@ export const useAppStateManagement = () => {
     } catch (error) {
       handleError(error);
     }
-  };
+  }
 
   // クイックメモをデータベースに保存する関数 ---------------------------------------------------------------------------
   const saveQuickMemoDb = async (quickMemoText: string) => {

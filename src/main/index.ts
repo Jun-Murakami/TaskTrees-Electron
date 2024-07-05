@@ -105,7 +105,7 @@ function createWindow(): void {
     ...windowState.bounds, // 保存されたウィンドウの位置とサイズを適用
     ...(process.platform === 'linux' ? { icon } : {}),
     webPreferences: {
-      preload: join(__dirname, '../preload/index.js'),
+      preload: join(__dirname, '../preload/index.mjs'),
       sandbox: false,
       spellcheck: false,
     },

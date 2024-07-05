@@ -97,23 +97,29 @@ export const useDatabase = () => {
     try {
       // newItemsの内容をチェック
       if (!isTreeItemArray(newItems)) {
-        await showDialog(
-          'ツリーデータが不正のため、データベースへの保存がキャンセルされました。修正するにはツリーデータをダウンロードし、手動で修正してください。\n\n※ツリーデータが配列ではありません。',
-          'Error'
-        );
+        await showDialog('ツリーデータが不正のため、データベースへの保存がキャンセルされました。修正するにはツリーデータをダウンロードし、手動で修正してください。\n\n※ツリーデータが配列ではありません。', 'Error');
         return;
       }
 
       // newItemsの内容を詳細にチェック
       const result = validateTreeItems(newItems);
       if (result !== '') {
-        await showDialog(
-          'ツリーデータが不正のため、データベースへの保存がキャンセルされました。修正するにはツリーデータをダウンロードし、手動で修正してください。\n\n' +
-            result,
-          'Error'
-        );
+        await showDialog('ツリーデータが不正のため、データベースへの保存がキャンセルされました。修正するにはツリーデータをダウンロードし、手動で修正してください。\n\n' + result, 'Error');
         return;
       }
+
+      // undefinedのプロパティを削除
+      const removeUndefined = (obj: Record<string, unknown>): Record<string, unknown> => {
+        Object.keys(obj).forEach(key => {
+          if (obj[key] && typeof obj[key] === 'object') {
+            removeUndefined(obj[key] as Record<string, unknown>);
+          } else if (obj[key] === undefined) {
+            delete obj[key];
+          }
+        });
+        return obj;
+      };
+      const cleanedItems = removeUndefined(JSON.parse(JSON.stringify(newItems)));
 
       const treeStateRef = ref(getDatabase(), `trees/${targetTree}/items`);
       // 更新対象が存在するかチェック
@@ -121,7 +127,7 @@ export const useDatabase = () => {
         .then(async (snapshot) => {
           if (snapshot.exists()) {
             // 存在する場合、更新を実行
-            await set(treeStateRef, newItems).catch((error) => {
+            await set(treeStateRef, cleanedItems).catch((error) => {
               handleError('データベースの保存に失敗しました。code:3\n\n' + error);
             });
             await saveTimeStampDb(targetTree);
@@ -209,10 +215,7 @@ export const useDatabase = () => {
 
           if (missingTrees.length > 0) {
             await saveTreesListDb(orderedTreesList, true);
-            await showDialog(
-              '１つ以上のツリーが削除されたか、アクセス権限が変更されました。\n\n' + missingTrees.join('\n'),
-              'Information'
-            );
+            await showDialog('１つ以上のツリーが削除されたか、アクセス権限が変更されました。\n\n' + missingTrees.join('\n'), 'Information');
           }
 
           return orderedTreesList;
