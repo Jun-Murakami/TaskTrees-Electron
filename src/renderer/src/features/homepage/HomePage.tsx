@@ -1,4 +1,4 @@
-import { Button, CircularProgress, Typography, Box } from '@mui/material';
+import { Button, CircularProgress, Typography, Box, Divider } from '@mui/material';
 import { DeleteForever } from '@mui/icons-material';
 import { TaskTreesLogo } from '@/features/common/TaskTreesLogo';
 import { ResponsiveDrawer } from '@/features/homepage/components/ResponsiveDrawer';
@@ -43,6 +43,7 @@ export function HomePage() {
 
   return (
     <>
+      {process.platform !== 'darwin' && <Divider sx={{ width: '100%', position: 'fixed', top: 0, zIndex: 1500 }} />}
       {isLoggedIn ? (
         !isWaitingForDelete ? (
           // ログイン後のメイン画面
