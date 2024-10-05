@@ -16,6 +16,8 @@ import { useTreeStateStore } from '@/store/treeStateStore';
 
 import { useElectron } from '@/hooks/useElectron';
 
+const isWindows = navigator.userAgent.includes('Windows');
+
 export function HomePage() {
   const isLoading = useAppStateStore((state) => state.isLoading); // ローディング中の状態
   const isLoggedIn = useAppStateStore((state) => state.isLoggedIn); // ログイン状態
@@ -43,7 +45,7 @@ export function HomePage() {
 
   return (
     <>
-      {process.platform !== 'darwin' && <Divider sx={{ width: '100%', position: 'fixed', top: 0, zIndex: 1500 }} />}
+      {isWindows && <Divider sx={{ width: '100%', position: 'fixed', top: 0, zIndex: 1500 }} />}
       {isLoggedIn ? (
         !isWaitingForDelete ? (
           // ログイン後のメイン画面
