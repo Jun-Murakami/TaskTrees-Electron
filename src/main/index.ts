@@ -1,12 +1,9 @@
 import { app, shell, BrowserWindow, ipcMain, nativeTheme, Menu, dialog } from 'electron';
-import crypto from 'crypto';
 import fs from 'fs';
 import path, { join } from 'path';
 import { electronApp, optimizer, is } from '@electron-toolkit/utils';
 import contextMenu from 'electron-context-menu';
 import icon from '../../resources/icon.png?asset';
-import express from 'express';
-import { Server } from 'http';
 
 let mainWindow: BrowserWindow | null = null; // mainWindowをグローバル変数として宣言
 interface WindowState {
@@ -18,59 +15,6 @@ interface WindowState {
   };
   isMaximized?: boolean;
 }
-
-const expressApp = express();
-// Expressサーバの設定
-const PORT = 8080;
-// Expressサーバの設定
-expressApp.get('/', (_, res) => {
-  res.send('Server is running.');
-});
-
-let server: Server | null = null; // サーバインスタンスを保持する変数
-
-// サーバを起動する関数
-function startServer() {
-  if (!server) {
-    // サーバが既に起動していない場合のみ起動
-    server = expressApp.listen(PORT, () => {
-      console.log(`Server is running at http://localhost:${PORT}`);
-    });
-  }
-}
-
-// サーバを停止する関数
-function stopServer() {
-  if (server) {
-    // サーバが起動している場合のみ停止
-    setTimeout(() => {
-      server?.close(() => {
-        console.log('Server is stopped.');
-      });
-      server = null; // サーバインスタンスをクリア
-    }, 5000);
-  }
-}
-
-const generateState = () => {
-  return crypto.randomBytes(16).toString('hex');
-};
-
-const clientId = import.meta.env.VITE_CLIENT_ID;
-const clientSecret = import.meta.env.VITE_CLIENT_SECRET;
-const redirectUri = 'http://localhost:8080/__/auth/handler';
-const scope = 'email profile';
-const state = generateState();
-
-const authUrl =
-  'https://accounts.google.com/o/oauth2/v2/auth?' +
-  new URLSearchParams({
-    client_id: clientId,
-    redirect_uri: redirectUri,
-    response_type: 'code',
-    scope: scope,
-    state: state,
-  }).toString();
 
 contextMenu({
   showInspectElement: is.dev,
@@ -298,17 +242,44 @@ if (!gotTheLock) {
       }
     });
 
-    // Google認証のためのURLをシェルで開く
-    ipcMain.on('open-google-auth-url', () => {
-      shell.openExternal(authUrl);
-    });
+    // 認証のためのURLを開く
+    ipcMain.handle('open-oauth-url', (_, url: string) => {
+      return new Promise((resolve, reject) => {
+        const window = new BrowserWindow({
+          width: 800,
+          height: 800,
+          webPreferences: {
+            nodeIntegration: false,
+            contextIsolation: true,
+            sandbox: false,
+          },
+          autoHideMenuBar: true,
+        })
+        window.loadURL(url)
 
-    ipcMain.on('start-server', () => {
-      startServer();
-    });
+        // ユーザーがウィンドウを閉じた場合にRejectを返す
+        window.on('closed', () => {
+          reject(new Error('closed-by-user'))
+        })
 
-    ipcMain.on('stop-server', () => {
-      stopServer();
+        window.webContents.on("will-navigate", (_, url) => {
+          if (url.startsWith(`https://${import.meta.env.VITE_AUTH_DOMAIN}/auth/redirect`)) {
+            window.removeAllListeners('closed') // 'closed'イベントリスナーを削除
+            window.close()
+
+            // get ID token from the URL
+            const urlObj = new URL(url)
+            const credential = urlObj.searchParams.get("credential")
+
+            if (credential === null) {
+              reject(new Error("ID Token is missing"))
+              return
+            }
+
+            resolve(JSON.parse(credential))
+          }
+        })
+      })
     });
 
     let isQuitting = false;
@@ -357,40 +328,6 @@ if (!gotTheLock) {
     // データをバックアップ
     ipcMain.on('save-backup', (_, { data }) => {
       saveBackup(data);
-    });
-
-    // OAuth認証プロバイダからのリダイレクトを処理するエンドポイント
-    expressApp.get('/__/auth/handler', async (req, res) => {
-      // URLクエリから認証コードを取得し、デコードする
-      const code = req.query.code;
-
-      if (code && typeof code === 'string') {
-        // Now that we have the code, use that to acquire tokens.
-        const tokenUrl = 'https://oauth2.googleapis.com/token';
-        const params = new URLSearchParams();
-        params.append('code', code);
-        params.append('client_id', clientId);
-        params.append('client_secret', clientSecret);
-        params.append('redirect_uri', redirectUri);
-        params.append('grant_type', 'authorization_code');
-        params.append('access_type', 'offline');
-
-        fetch(tokenUrl, {
-          method: 'POST',
-          body: params,
-          headers: {
-            'Content-Type': 'application/x-www-form-urlencoded',
-          },
-        })
-          .then((response) => response.json())
-          .then((data) => {
-            mainWindow?.webContents.send('google-auth-token', data.id_token);
-            res.send('認証が完了しました。このページを閉じてください。');
-          })
-          .catch((error) => console.error('Error:', error));
-      } else {
-        res.send('認証コードが見つかりませんでした。');
-      }
     });
 
     createWindow();

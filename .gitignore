@@ -6,3 +6,5 @@ out
 *.local
 .env.local
 .env
+.env.production
+.env.development

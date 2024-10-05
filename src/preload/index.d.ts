@@ -1,5 +1,5 @@
 import { ElectronAPI as BaseElectronAPI } from '@electron-toolkit/preload';
-
+import { OAuthCredential } from 'firebase/auth';
 interface ExtendedElectronAPI extends BaseElectronAPI {
   getAppVersion: () => Promise<string>;
   setDarkMode: (isDarkMode: boolean) => void;
@@ -19,11 +19,7 @@ interface ExtendedElectronAPI extends BaseElectronAPI {
   onBeforeClose: (callback: () => void) => void;
   removeBeforeCloseListener: () => void;
   sendCloseCompleted: (data: string) => void;
-  openGoogleAuthURL: () => void;
-  onGoogleAuthToken: (callback: (token: string) => void) => void;
-  removeGoogleAuthTokenListener: () => void;
-  startServer: () => void;
-  stopServer: () => void;
+  openOAuthURL: (url: string) => Promise<OAuthCredential>;
 }
 
 declare global {

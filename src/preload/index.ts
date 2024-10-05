@@ -33,11 +33,7 @@ if (process.contextIsolated) {
       onBeforeClose: (callback) => ipcRenderer.on('before-close', callback),
       removeBeforeCloseListener: () => ipcRenderer.removeAllListeners('before-close'),
       sendCloseCompleted: (data) => ipcRenderer.send('close-completed', data),
-      openGoogleAuthURL: () => ipcRenderer.send('open-google-auth-url'),
-      onGoogleAuthToken: (callback: (token: string) => void) => ipcRenderer.on('google-auth-token', (_, data) => callback(data)),
-      removeGoogleAuthTokenListener: () => ipcRenderer.removeAllListeners('google-auth-token'),
-      startServer: () => ipcRenderer.send('start-server'),
-      stopServer: () => ipcRenderer.send('stop-server'),
+      openOAuthURL: (url: string) => ipcRenderer.invoke('open-oauth-url', url),
     });
     contextBridge.exposeInMainWorld('api', api);
   } catch (error) {

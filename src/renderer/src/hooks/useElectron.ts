@@ -1,42 +1,32 @@
 import { useEffect } from 'react';
-import { useAppStateStore } from '../store/appStateStore';
-import { useTreeStateStore } from '../store/treeStateStore';
-import { useTreeManagement } from './useTreeManagement';
-import { useDatabase } from '../hooks/useDatabase';
+import { useAppStateStore } from '@/store/appStateStore';
+import { useTreeStateStore } from '@/store/treeStateStore';
+import { useTreeManagement } from '@/hooks/useTreeManagement';
+
+const isElectron = navigator.userAgent.includes('Electron');
 
 export const useElectron = () => {
-  const setGoogleToken = useAppStateStore((state) => state.setGoogleToken);
   const darkMode = useAppStateStore((state) => state.darkMode);
   const isLoggedIn = useAppStateStore((state) => state.isLoggedIn);
-  const currentTree = useTreeStateStore((state) => state.currentTree);
 
-  const items = useTreeStateStore((state) => state.items);
-
-  const { saveItemsDb } = useDatabase();
-  const { handleCreateNewTree, handleLoadedContent, handleDownloadTreeState, handleDownloadAllTrees } = useTreeManagement();
-
-  //Googleログインのトークン受信リスナーを登録
-  useEffect(() => {
-    window.electron.onGoogleAuthToken((token: string) => {
-      setGoogleToken(token);
-    });
-    return () => {
-      window.electron.removeGoogleAuthTokenListener();
-    };
-  }, []);
+  const { handleCreateNewTree, handleLoadedContent, handleDownloadTreeState, handleDownloadAllTrees, saveItems } = useTreeManagement();
 
   // 新規ツリー作成のイベントリスナーを登録
   useEffect(() => {
+    if (!isElectron || !isLoggedIn) return;
+
     window.electron.createNewTree(() => {
       handleCreateNewTree();
     });
     return () => {
       window.electron.removeCreateNewTreeListener(); // コンポーネントのアンマウント時にイベントリスナーを削除
     };
-  }, [handleCreateNewTree]);
+  }, [handleCreateNewTree, isLoggedIn]);
 
   // ツリーのインポートのイベントリスナーを登録
   useEffect(() => {
+    if (!isElectron || !isLoggedIn) return;
+
     const handleAsyncLoadedContent = async (data: string | null) => {
       await handleLoadedContent(data);
     };
@@ -44,35 +34,44 @@ export const useElectron = () => {
     return () => {
       window.electron.removeLoadedContentListener();
     };
-  }, [handleLoadedContent]);
+  }, [handleLoadedContent, isLoggedIn]);
 
   // ツリーの保存のイベントリスナーを登録
   useEffect(() => {
+    if (!isElectron || !isLoggedIn) return;
+
     window.electron.saveTree(async () => {
       await handleDownloadTreeState();
     });
     return () => {
       window.electron.removeSaveTreeListener();
     };
-  }, [handleDownloadTreeState]);
+  }, [handleDownloadTreeState, isLoggedIn]);
 
   // 全ツリーの保存のイベントリスナーを登録
   useEffect(() => {
+    if (!isElectron || !isLoggedIn) return;
+
     window.electron.saveAllTrees(async () => {
       await handleDownloadAllTrees();
     });
     return () => {
       window.electron.removeSaveAllTreesListener();
     };
-  }, [handleDownloadAllTrees]);
+  }, [handleDownloadAllTrees, isLoggedIn]);
 
   // ダークモードの状態を監視し、変更があれば反映
   useEffect(() => {
+    if (!isElectron) return;
+
     window.electron.setDarkMode(darkMode);
   }, [darkMode]);
 
   // ログイン状態によってメニューの有効無効を切り替える
   useEffect(() => {
+    if (!isElectron) return;
+    const currentTree = useTreeStateStore.getState().currentTree;
+
     window.electron.toggleMenuItem('create-new-tree', isLoggedIn);
     window.electron.toggleMenuItem('import-tree', isLoggedIn);
     if (!currentTree) {
@@ -81,12 +80,18 @@ export const useElectron = () => {
       window.electron.toggleMenuItem('save-tree', isLoggedIn);
     }
     window.electron.toggleMenuItem('save-all-tree', isLoggedIn);
-  }, [isLoggedIn, currentTree]);
+  }, [isLoggedIn]);
 
   // アプリ終了時に全ツリーを保存
   useEffect(() => {
+    if (!isElectron) return;
+
     window.electron.onBeforeClose(async () => {
       try {
+        if (!isLoggedIn) {
+          window.electron.sendCloseCompleted('error');
+          return;
+        }
         const data = await handleDownloadAllTrees(true);
         if (data && typeof data === 'string') {
           window.electron.sendCloseCompleted(data);
@@ -101,10 +106,12 @@ export const useElectron = () => {
     return () => {
       window.electron.removeBeforeCloseListener();
     };
-  }, [handleDownloadAllTrees]);
+  }, [handleDownloadAllTrees, isLoggedIn]);
 
   // ログインしたらタイマーをセットしてデータをバックアップ
   useEffect(() => {
+    if (!isElectron) return;
+
     if (isLoggedIn) {
       const asyncRun = async () => {
         const data = await handleDownloadAllTrees(true);
@@ -130,19 +137,23 @@ export const useElectron = () => {
         clearInterval(timer2);
       };
     }
-    return () => {};
+    return () => { };
   }, [isLoggedIn, handleDownloadAllTrees]);
 
   // アプリ終了時に現在のツリーを保存
   useEffect(() => {
-    window.electron.saveLastTree(() => {
+    if (!isElectron || !isLoggedIn) return;
+
+    window.electron.saveLastTree(async () => {
+      const currentTree = useTreeStateStore.getState().currentTree;
+      const items = useTreeStateStore.getState().items;
       if (currentTree) {
-        saveItemsDb(items, currentTree);
+        await saveItems(items, currentTree);
       }
     });
 
     return () => {
       window.electron.removeSaveLastTreeListener();
     };
-  }, [currentTree, saveItemsDb]);
+  }, [saveItems, isLoggedIn]);
 };
