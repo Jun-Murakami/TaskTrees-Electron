@@ -43,7 +43,6 @@ export const MessagePaper = () => {
 
     // 現在のアプリバージョンを取得
     const fetchCurrentVersion = async () => {
-      //@ts-expect-error Electron
       const version = await window.electron.getAppVersion();
       setCurrentVersion(version);
     };
