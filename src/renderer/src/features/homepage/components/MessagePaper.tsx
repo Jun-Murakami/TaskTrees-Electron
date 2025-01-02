@@ -1,8 +1,27 @@
 import { useState, useEffect } from 'react';
-import { Paper, Typography, Stack, Button, Divider } from '@mui/material';
+import { Paper, Typography, Stack, Button, Divider, Box } from '@mui/material';
 import { useAppStateStore } from '@/store/appStateStore';
 
 const isElectron = navigator.userAgent.includes('Electron');
+
+const updateHistory = [
+  {
+    date: '2025.01.02',
+    content: 'アプリ休止時のデータ保存の問題を修正しました。',
+  },
+  {
+    date: '2024.10.05',
+    content: 'アーカイブ機能を追加しました。',
+  },
+  {
+    date: '2024.07.05',
+    content: 'タイマー機能を追加しました。',
+  },
+  {
+    date: '2024.04.15',
+    content: 'クイックメモ機能を追加しました。',
+  },
+];
 
 export const MessagePaper = () => {
   const [currentVersion, setCurrentVersion] = useState('');
@@ -24,6 +43,7 @@ export const MessagePaper = () => {
 
     // 現在のアプリバージョンを取得
     const fetchCurrentVersion = async () => {
+      //@ts-expect-error Electron
       const version = await window.electron.getAppVersion();
       setCurrentVersion(version);
     };
@@ -75,13 +95,14 @@ export const MessagePaper = () => {
         <>
           <Paper>
             <Typography variant='body2' sx={{ textAlign: 'left', p: 2 }} gutterBottom>
-              2024.10.5 アーカイブ機能を追加しました。
-              <br />
-              <br />
-              2024.7.5 タイマー機能を追加しました。
-              <br />
-              <br />
-              2024.4.15 クイックメモ機能を追加しました。
+              <Stack spacing={1}>
+                {updateHistory.map((update, index: number) => (
+                  <Box key={index} sx={{ display: 'flex' }}>
+                    <Box sx={{ minWidth: '85px' }}>{update.date}</Box>
+                    <Box>{update.content}</Box>
+                  </Box>
+                ))}
+              </Stack>
             </Typography>
           </Paper>
           <Button
