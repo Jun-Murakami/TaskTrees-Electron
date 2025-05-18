@@ -91,10 +91,9 @@ function createWindow(): void {
       // 全ツリーをバックアップ
       mainWindow.webContents.send('before-close');
 
-      // ウィンドウの状態を取得
+      // ウィンドウの状態を取得（最大化を解除せずに通常サイズを取得）
       const isMaximized = mainWindow.isMaximized();
-      mainWindow.unmaximize(); // 最大化状態を解除
-      const bounds = mainWindow.getBounds();
+      const bounds = isMaximized ? mainWindow.getNormalBounds() : mainWindow.getBounds();
 
       // JSON形式で保存するデータ
       const windowState = {
